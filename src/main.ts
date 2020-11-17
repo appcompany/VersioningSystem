@@ -1,19 +1,28 @@
-import * as core from '@actions/core'
-import {wait} from './wait'
+const core = require('@actions/core');
+const github = require('@actions/github');
 
-async function run(): Promise<void> {
+async function run() {
   try {
-    const ms: string = core.getInput('milliseconds')
-    core.debug(`Waiting ${ms} milliseconds ...`) // debug is only output if you set the secret `ACTIONS_RUNNER_DEBUG` to true
+    const message = core.getInput('message');
+    const github_token = core.getInput('GITHUB_TOKEN');
 
-    core.debug(new Date().toTimeString())
-    await wait(parseInt(ms, 10))
-    core.debug(new Date().toTimeString())
+    const context = github.context;
+    if (context.payload.pull_request == null) {
+        core.setFailed('No pull request found.');
+        return;
+    }
+    const pull_request_number = context.payload.pull_request.number;
 
-    core.setOutput('time', new Date().toTimeString())
+    const octokit = new github.GitHub(github_token);
+    const new_comment = octokit.issues.createComment({
+        ...context.repo,
+        issue_number: pull_request_number,
+        body: message
+      });
+
   } catch (error) {
-    core.setFailed(error.message)
+    core.setFailed(error.message);
   }
 }
 
-run()
+run();
