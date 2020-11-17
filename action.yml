@@ -3,4 +3,4 @@ description: 'Provides you with all app versioning needs'
 author: 'App Company.io'
 runs:
   using: 'node12'
-  main: 'lib/main.js'
+  main: 'dist/index.js'
