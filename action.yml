@@ -4,3 +4,7 @@ author: 'App Company.io'
 runs:
   using: 'node12'
   main: 'dist/index.js'
+inputs:
+  githubToken:
+    description: 'Github Token to allow the bot to comment on pull requests'
+    required: true

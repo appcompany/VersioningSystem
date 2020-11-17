@@ -10,7 +10,7 @@ async function run() {
     }
     
     const pull_request_number = context.payload.pull_request.number
-    const octokit = github.getOctokit(core.getInput('GITHUB_TOKEN') ?? (process.env.GITHUB_TOKEN ?? ''))
+    const octokit = github.getOctokit(core.getInput('githubToken'))
 
     octokit.issues.createComment({
       ...context.repo,
