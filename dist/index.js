@@ -1380,6 +1380,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const core = __importStar(__webpack_require__(186));
 const github = __importStar(__webpack_require__(438));
 function run() {
+    var _a;
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const context = github.context;
@@ -1387,9 +1388,14 @@ function run() {
                 core.setFailed('No pull request found.');
                 return;
             }
-            const pull_request_number = context.payload.pull_request.number;
+            const pull_number = context.payload.pull_request.number;
             const octokit = github.getOctokit(core.getInput('githubToken'));
-            octokit.issues.createComment(Object.assign(Object.assign({}, context.repo), { issue_number: pull_request_number, body: 'this is a test message.' }));
+            core.info((_a = context.payload.pull_request.body) !== null && _a !== void 0 ? _a : '');
+            // octokit.issues.createComment({
+            //   ...context.repo,
+            //   issue_number: pull_request_number,
+            //   body: 'this is a test message.'
+            // })
         }
         catch (error) {
             core.setFailed(error.message);

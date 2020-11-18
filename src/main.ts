@@ -9,14 +9,16 @@ async function run() {
       return
     }
     
-    const pull_request_number = context.payload.pull_request.number
+    const pull_number = context.payload.pull_request.number
     const octokit = github.getOctokit(core.getInput('githubToken'))
 
-    octokit.issues.createComment({
-      ...context.repo,
-      issue_number: pull_request_number,
-      body: 'this is a test message.'
-    })
+    core.info(context.payload.pull_request.body ?? '')
+
+    // octokit.issues.createComment({
+    //   ...context.repo,
+    //   issue_number: pull_request_number,
+    //   body: 'this is a test message.'
+    // })
 
   } catch (error) {
     core.setFailed(error.message)
