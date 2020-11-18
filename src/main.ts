@@ -1,5 +1,16 @@
 import * as core from '@actions/core'
-import * as github from '@actions/github'
+import * as github from '@actions/github' 
+
+export enum SectionType {
+  release = 'release',
+  internal = 'internal'
+}
+
+export enum VersionIncrease {
+  major = 'major',
+  minor = 'minor',
+  patch = 'patch'
+}
 
 async function run() {
   try {
@@ -12,7 +23,8 @@ async function run() {
     const pull_number = context.payload.pull_request.number
     const octokit = github.getOctokit(core.getInput('githubToken'))
 
-    core.info(context.payload.pull_request.body ?? '')
+    const pullRequestBody = context.payload.pull_request.body ?? ''
+
 
     // octokit.issues.createComment({
     //   ...context.repo,
