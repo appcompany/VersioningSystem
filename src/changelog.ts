@@ -26,14 +26,14 @@ export class ChangelogSection {
 // ordered list of changelog sections
 export const sections : ChangelogSection[] = [
   new ChangelogSection('New Features', ['bug','bugfix','fix'], SectionType.release, VersionIncrease.minor),
-  new ChangelogSection('Bug Fixes', ['feat','feature','new-feat','new-feature'], SectionType.release, VersionIncrease.patch),
+  new ChangelogSection('Bug Fixes', ['feature','feat','new-feat','new-feature'], SectionType.release, VersionIncrease.patch),
   new ChangelogSection('Changes', ['change','refactor','changes'], SectionType.release, VersionIncrease.minor),
-  new ChangelogSection('Languages', ['lang','language','new-lang','new-language'], SectionType.release, VersionIncrease.minor),
-  new ChangelogSection('Language Fixes', ['lang-fix','lang(fix)','langfix','fix-lang'], SectionType.release, VersionIncrease.patch),
-  new ChangelogSection('Metadata', ['meta','metadata'], SectionType.release, VersionIncrease.patch, true),
-  new ChangelogSection('Documentation', ['docs','doc'], SectionType.internal),
+  new ChangelogSection('Languages', ['language','lang','new-lang','new-language'], SectionType.release, VersionIncrease.minor),
+  new ChangelogSection('Language Fixes', ['language-fix','lang-fix','lang(fix)','langfix','fix-lang'], SectionType.release, VersionIncrease.patch),
+  new ChangelogSection('Metadata', ['metadata','meta'], SectionType.release, VersionIncrease.patch, true),
+  new ChangelogSection('Documentation', ['documentation','docs','doc'], SectionType.internal),
   new ChangelogSection('Build System', ['ci','build-system','build'], SectionType.internal),
-  new ChangelogSection('Tests', ['test','testing'], SectionType.internal),
+  new ChangelogSection('Tests', ['tests','test','testing'], SectionType.internal),
   new ChangelogSection('Miscellaneous', ['misc','chore'], SectionType.internal)
 ]
 

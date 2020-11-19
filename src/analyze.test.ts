@@ -36,5 +36,10 @@ describe('Analyzing', () => {
       - fixed a typo in the German translation
     `.split('\n').map(line => line.trim()).join('\n').trim() + '\n')
     expect(result.internalChangelog).to.equal('')
+    expect(result.labels).to.contain('language')
+    expect(result.labels).to.contain('bug')
+    expect(result.labels).to.contain('feature')
+    expect(result.labels).to.contain('language-fix')
+    expect(result.labels).to.contain('can-release')
   })
 })

@@ -1362,14 +1362,14 @@ exports.ChangelogSection = ChangelogSection;
 // ordered list of changelog sections
 exports.sections = [
     new ChangelogSection('New Features', ['bug', 'bugfix', 'fix'], SectionType.release, versions_1.VersionIncrease.minor),
-    new ChangelogSection('Bug Fixes', ['feat', 'feature', 'new-feat', 'new-feature'], SectionType.release, versions_1.VersionIncrease.patch),
+    new ChangelogSection('Bug Fixes', ['feature', 'feat', 'new-feat', 'new-feature'], SectionType.release, versions_1.VersionIncrease.patch),
     new ChangelogSection('Changes', ['change', 'refactor', 'changes'], SectionType.release, versions_1.VersionIncrease.minor),
-    new ChangelogSection('Languages', ['lang', 'language', 'new-lang', 'new-language'], SectionType.release, versions_1.VersionIncrease.minor),
-    new ChangelogSection('Language Fixes', ['lang-fix', 'lang(fix)', 'langfix', 'fix-lang'], SectionType.release, versions_1.VersionIncrease.patch),
-    new ChangelogSection('Metadata', ['meta', 'metadata'], SectionType.release, versions_1.VersionIncrease.patch, true),
-    new ChangelogSection('Documentation', ['docs', 'doc'], SectionType.internal),
+    new ChangelogSection('Languages', ['language', 'lang', 'new-lang', 'new-language'], SectionType.release, versions_1.VersionIncrease.minor),
+    new ChangelogSection('Language Fixes', ['language-fix', 'lang-fix', 'lang(fix)', 'langfix', 'fix-lang'], SectionType.release, versions_1.VersionIncrease.patch),
+    new ChangelogSection('Metadata', ['metadata', 'meta'], SectionType.release, versions_1.VersionIncrease.patch, true),
+    new ChangelogSection('Documentation', ['documentation', 'docs', 'doc'], SectionType.internal),
     new ChangelogSection('Build System', ['ci', 'build-system', 'build'], SectionType.internal),
-    new ChangelogSection('Tests', ['test', 'testing'], SectionType.internal),
+    new ChangelogSection('Tests', ['tests', 'test', 'testing'], SectionType.internal),
     new ChangelogSection('Miscellaneous', ['misc', 'chore'], SectionType.internal)
 ];
 const lowercase = (input) => input.charAt(0).toLowerCase() + input.slice(1);
@@ -1467,7 +1467,7 @@ function run() {
                 }
             })()}
       #### Version Details
-      **${analysis.currentVersion.display}** -> **${analysis.nextVersion.display}**
+      *${analysis.currentVersion.display}* -> **${analysis.nextVersion.display}**
 
       ### Release Changes
       \`\`\`
@@ -1480,6 +1480,8 @@ function run() {
     `.split('\n').map(line => line.trim()).join('\n').trim();
             core.info(`making comment:\n${comment}`);
             octokit.issues.createComment(Object.assign(Object.assign({}, context.repo), { issue_number: pull_number, body: comment }));
+            octokit.issues.addLabels(Object.assign(Object.assign({}, context.repo), { issue_number: pull_number, body: comment, labels: analysis.labels }));
+            core.setOutput('change_analysis.json', JSON.stringify(analysis));
         }
         catch (error) {
             core.setFailed(error.message);
@@ -5556,7 +5558,7 @@ function extractList(body) {
 }
 exports.extractList = extractList;
 function analyze(list) {
-    var _a;
+    var _a, _b, _c, _d, _e;
     const changes = list.split('\n')
         .map(line => {
         const section = changelog_1.sections.find(section => { var _a, _b; return section.tags.includes((_b = (_a = line.match(/([^[]+(?=]->))/g)) === null || _a === void 0 ? void 0 : _a.join('')) !== null && _b !== void 0 ? _b : ''); });
@@ -5565,9 +5567,18 @@ function analyze(list) {
     });
     const current = versions_1.currentVersion();
     const increase = (_a = changes.map(change => { var _a; return (_a = change.section) === null || _a === void 0 ? void 0 : _a.increases; }).sort()[0]) !== null && _a !== void 0 ? _a : versions_1.VersionIncrease.none;
+    var labels = [];
+    for (const change of changes) {
+        if (!labels.includes((_c = (_b = change.section) === null || _b === void 0 ? void 0 : _b.tags[0]) !== null && _c !== void 0 ? _c : '')) {
+            labels.push((_e = (_d = change.section) === null || _d === void 0 ? void 0 : _d.tags[0]) !== null && _e !== void 0 ? _e : '');
+        }
+    }
+    labels = labels.filter(tag => tag != '');
+    if (increase != versions_1.VersionIncrease.none)
+        labels.push('can-release');
     return {
         versionBump: increase,
-        changes,
+        changes, labels,
         currentVersion: current,
         nextVersion: versions_1.nextVersion(current, increase),
         releaseChangelog: changelog_1.changelog(changes, changelog_1.SectionType.release),

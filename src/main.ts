@@ -27,7 +27,7 @@ async function run() {
         }
       })()}
       #### Version Details
-      **${analysis.currentVersion.display}** -> **${analysis.nextVersion.display}**
+      *${analysis.currentVersion.display}* -> **${analysis.nextVersion.display}**
 
       ### Release Changes
       \`\`\`
@@ -44,6 +44,13 @@ async function run() {
       issue_number: pull_number,
       body: comment
     })
+    octokit.issues.addLabels({
+      ...context.repo,
+      issue_number: pull_number,
+      body: comment,
+      labels: analysis.labels
+    })
+    core.setOutput('change_analysis.json',JSON.stringify(analysis))
 
   } catch (error) {
     core.setFailed(error.message)

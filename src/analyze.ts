@@ -23,6 +23,7 @@ export interface Analysis {
   nextVersion: Version
   releaseChangelog: string
   internalChangelog: string
+  labels: string[]
 }
 
 export function analyze(list: string) : Analysis {
@@ -34,9 +35,17 @@ export function analyze(list: string) : Analysis {
     })
   const current = currentVersion()
   const increase = changes.map(change => change.section?.increases).sort()[0] ?? VersionIncrease.none
+  var labels : string[] = []
+  for (const change of changes) {
+    if (!labels.includes(change.section?.tags[0] ?? '')) {
+      labels.push(change.section?.tags[0] ?? '')
+    }
+  }
+  labels = labels.filter(tag => tag != '')
+  if (increase != VersionIncrease.none) labels.push('can-release')
   return {
     versionBump: increase,
-    changes,
+    changes, labels,
     currentVersion: current,
     nextVersion: nextVersion(current,increase),
     releaseChangelog: changelog(changes, SectionType.release),
