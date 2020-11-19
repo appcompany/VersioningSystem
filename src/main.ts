@@ -23,7 +23,9 @@ async function run() {
     core.info(`making comment:\n${commentBody}`)
     octokit.paginate(octokit.issues.listComments, { ...context.repo, issue_number: pull_number })
     .then(comments => {
+      core.info(JSON.stringify(comments))
       const comment = comments.find(comment => { comment.body.includes('<!-- version-bot-comment: release-notes -->') })?.id
+      core.info(`${comment}`)
       if (comment == undefined) {
         octokit.issues.createComment({
           ...context.repo,
