@@ -1453,7 +1453,7 @@ function run() {
             }
             const pull_number = context.payload.pull_request.number;
             const pullRequestBody = (_a = context.payload.pull_request.body) !== null && _a !== void 0 ? _a : '';
-            const token = core.getInput('githubToken');
+            const token = core.getInput('token');
             const octokit = github.getOctokit(token);
             const analysis = analyze_1.analyze(analyze_1.extractList(pullRequestBody));
             const commentBody = analyze_1.generateComment(analysis);

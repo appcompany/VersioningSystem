@@ -14,7 +14,7 @@ async function run() {
     const pull_number = context.payload.pull_request.number
     const pullRequestBody = context.payload.pull_request.body ?? ''
 
-    const token = core.getInput('githubToken')
+    const token = core.getInput('token')
     const octokit = github.getOctokit(token)
 
     const analysis = analyze(extractList(pullRequestBody))
