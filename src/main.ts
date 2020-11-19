@@ -26,15 +26,14 @@ async function run() {
           return 'This pull request contains releasable changes.\nYou can release a new version with `/release`.'
         }
       })()}
-      #### Version Details:
-      Current Version:  ${analysis.currentVersion.display}
-      New Version:      ${analysis.nextVersion.display}
-      
-      ### Release Changes:
+      #### Version Details
+      **${analysis.currentVersion.display}** -> **${analysis.nextVersion.display}**
+
+      ### Release Changes
       \`\`\`
       ${analysis.releaseChangelog.trim().length > 0 ? analysis.releaseChangelog.trim() : 'no changes'}
       \`\`\`
-      ### Internal Changes:
+      ### Internal Changes
       \`\`\`
       ${analysis.internalChangelog.trim().length > 0 ? analysis.internalChangelog.trim() : 'no changes'}
       \`\`\`
