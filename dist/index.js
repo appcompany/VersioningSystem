@@ -1462,7 +1462,7 @@ function run() {
                 .then(comments => {
                 var _a;
                 core.info(JSON.stringify(comments));
-                const comment = (_a = comments.find(comment => { comment.body.includes('<!-- version-bot-comment: release-notes -->'); })) === null || _a === void 0 ? void 0 : _a.id;
+                const comment = (_a = comments.find(comment => comment.body.includes('<!-- version-bot-comment: release-notes -->'))) === null || _a === void 0 ? void 0 : _a.id;
                 core.info(`${comment}`);
                 if (comment == undefined) {
                     octokit.issues.createComment(Object.assign(Object.assign({}, context.repo), { issue_number: pull_number, body: commentBody }));
