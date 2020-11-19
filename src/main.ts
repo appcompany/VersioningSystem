@@ -18,24 +18,26 @@ async function run() {
     const octokit = github.getOctokit(token)
 
     const analysis = analyze(extractList(pullRequestBody))
+    const comment = `
+      ${(() => {
+        if (analysis.versionBump == VersionIncrease.none) {
+          return 'This pull request will currently not cause a release to be created, but can still be merged.'
+        } else {
+          return 'Thils pull request contains releasable changes. You can release it with `/release`.'
+        }
+      })()}
+      
+      ## Release Changes
+      ${analysis.releaseChangelog.length > 0 ? analysis.releaseChangelog : 'no changes'}
+
+      ## Internal Changes
+      ${analysis.internalChangelog.length > 0 ? analysis.internalChangelog : 'no changes'}
+    `.split('\n').map(line => line.trim()).join('\n').trim()
+    core.info(`making comment:\n${comment}`)
     octokit.issues.createComment({
       ...context.repo,
       issue_number: pull_number,
-      body: `
-        ${(() => {
-          if (analysis.versionBump == VersionIncrease.none) {
-            return 'This pull request will currently not cause a release to be created, but can still be merged.'
-          } else {
-            return 'Thils pull request contains releasable changes. You can release it with `/release`.'
-          }
-        })()}
-        
-        ## Release Changes
-        ${analysis.releaseChangelog.length > 0 ? analysis.releaseChangelog : 'no changes'}
-
-        ## Internal Changes
-        ${analysis.internalChangelog.length > 0 ? analysis.internalChangelog : 'no changes'}
-      `.split('\n').map(line => line.trim()).join('\n').trim()
+      body: comment
     })
 
   } catch (error) {

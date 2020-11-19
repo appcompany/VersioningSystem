@@ -1457,13 +1457,24 @@ function run() {
             const token = core.getInput('githubToken');
             const octokit = github.getOctokit(token);
             const analysis = analyze_1.analyze(analyze_1.extractList(pullRequestBody));
-            if (analysis.versionBump == versions_1.VersionIncrease.none) {
-                octokit.issues.createComment(Object.assign(Object.assign({}, context.repo), { issue_number: pull_number, body: `This pull request will currently not cause a release to be created, but can still be merged.
+            const comment = `
+      ${(() => {
+                if (analysis.versionBump == versions_1.VersionIncrease.none) {
+                    return 'This pull request will currently not cause a release to be created, but can still be merged.';
+                }
+                else {
+                    return 'Thils pull request contains releasable changes. You can release it with `/release`.';
+                }
+            })()}
+      
+      ## Release Changes
+      ${analysis.releaseChangelog.length > 0 ? analysis.releaseChangelog : 'no changes'}
 
-        ` }));
-            }
-            else {
-            }
+      ## Internal Changes
+      ${analysis.internalChangelog.length > 0 ? analysis.internalChangelog : 'no changes'}
+    `.split('\n').map(line => line.trim()).join('\n').trim();
+            core.info(`making comment:\n${comment}`);
+            octokit.issues.createComment(Object.assign(Object.assign({}, context.repo), { issue_number: pull_number, body: comment }));
         }
         catch (error) {
             core.setFailed(error.message);
