@@ -1442,7 +1442,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const core = __importStar(__webpack_require__(186));
 const github = __importStar(__webpack_require__(438));
 const analyze_1 = __webpack_require__(920);
-const versions_1 = __webpack_require__(332);
 function run() {
     var _a;
     return __awaiter(this, void 0, void 0, function* () {
@@ -1457,30 +1456,20 @@ function run() {
             const token = core.getInput('githubToken');
             const octokit = github.getOctokit(token);
             const analysis = analyze_1.analyze(analyze_1.extractList(pullRequestBody));
-            const comment = `
-      ${(() => {
-                if (analysis.versionBump == versions_1.VersionIncrease.none) {
-                    return 'This pull request will currently not cause a release to be created, but can still be merged.';
+            const commentBody = analyze_1.generateComment(analysis);
+            core.info(`making comment:\n${commentBody}`);
+            octokit.paginate(octokit.issues.listComments, Object.assign(Object.assign({}, context.repo), { issue_number: pull_number }))
+                .then(comments => {
+                var _a;
+                const comment = (_a = comments.find(comment => { comment.body.includes('<!-- version-bot-comment: release-notes -->'); })) === null || _a === void 0 ? void 0 : _a.id;
+                if (comment == undefined) {
+                    octokit.issues.createComment(Object.assign(Object.assign({}, context.repo), { issue_number: pull_number, body: commentBody }));
                 }
                 else {
-                    return 'This pull request contains releasable changes.\nYou can release a new version with `/release`.';
+                    octokit.issues.updateComment(Object.assign(Object.assign({}, context.repo), { issue_number: pull_number, comment_id: comment, body: commentBody }));
                 }
-            })()}
-      #### Version Details
-      *${analysis.currentVersion.display}* -> **${analysis.nextVersion.display}**
-
-      ### Release Changes
-      \`\`\`
-      ${analysis.releaseChangelog.trim().length > 0 ? analysis.releaseChangelog.trim() : 'no changes'}
-      \`\`\`
-      ### Internal Changes
-      \`\`\`
-      ${analysis.internalChangelog.trim().length > 0 ? analysis.internalChangelog.trim() : 'no changes'}
-      \`\`\`
-    `.split('\n').map(line => line.trim()).join('\n').trim();
-            core.info(`making comment:\n${comment}`);
-            octokit.issues.createComment(Object.assign(Object.assign({}, context.repo), { issue_number: pull_number, body: comment }));
-            octokit.issues.addLabels(Object.assign(Object.assign({}, context.repo), { issue_number: pull_number, body: comment, labels: analysis.labels }));
+            });
+            octokit.issues.addLabels(Object.assign(Object.assign({}, context.repo), { issue_number: pull_number, labels: analysis.labels }));
             core.setOutput('change_analysis.json', JSON.stringify(analysis));
         }
         catch (error) {
@@ -5537,7 +5526,7 @@ exports.getApiBaseUrl = getApiBaseUrl;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.analyze = exports.extractList = void 0;
+exports.generateComment = exports.analyze = exports.extractList = void 0;
 const changelog_1 = __webpack_require__(82);
 const versions_1 = __webpack_require__(332);
 function extractList(body) {
@@ -5586,6 +5575,31 @@ function analyze(list) {
     };
 }
 exports.analyze = analyze;
+function generateComment(analysis) {
+    return `
+      ${(() => {
+        if (analysis.versionBump == versions_1.VersionIncrease.none) {
+            return 'This pull request will currently not cause a release to be created, but can still be merged.';
+        }
+        else {
+            return 'This pull request contains releasable changes.\nYou can release a new version with `/release`.';
+        }
+    })()}
+      #### Version Details
+      *${analysis.currentVersion.display}* -> **${analysis.nextVersion.display}**
+
+      ### Release Changes
+      \`\`\`
+      ${analysis.releaseChangelog.trim().length > 0 ? analysis.releaseChangelog.trim() : 'no changes'}
+      \`\`\`
+      ### Internal Changes
+      \`\`\`
+      ${analysis.internalChangelog.trim().length > 0 ? analysis.internalChangelog.trim() : 'no changes'}
+      \`\`\`
+      <!-- version-bot-comment: release-notes -->
+    `.split('\n').map(line => line.trim()).join('\n').trim();
+}
+exports.generateComment = generateComment;
 
 
 /***/ }),

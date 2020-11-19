@@ -1,6 +1,6 @@
 import * as core from '@actions/core'
 import * as github from '@actions/github' 
-import { analyze, extractList } from './analyze'
+import { analyze, extractList, generateComment } from './analyze'
 import { VersionIncrease } from './versions'
 
 async function run() {
@@ -18,36 +18,31 @@ async function run() {
     const octokit = github.getOctokit(token)
 
     const analysis = analyze(extractList(pullRequestBody))
-    const comment = `
-      ${(() => {
-        if (analysis.versionBump == VersionIncrease.none) {
-          return 'This pull request will currently not cause a release to be created, but can still be merged.'
-        } else {
-          return 'This pull request contains releasable changes.\nYou can release a new version with `/release`.'
-        }
-      })()}
-      #### Version Details
-      *${analysis.currentVersion.display}* -> **${analysis.nextVersion.display}**
+    const commentBody = generateComment(analysis)
 
-      ### Release Changes
-      \`\`\`
-      ${analysis.releaseChangelog.trim().length > 0 ? analysis.releaseChangelog.trim() : 'no changes'}
-      \`\`\`
-      ### Internal Changes
-      \`\`\`
-      ${analysis.internalChangelog.trim().length > 0 ? analysis.internalChangelog.trim() : 'no changes'}
-      \`\`\`
-    `.split('\n').map(line => line.trim()).join('\n').trim()
-    core.info(`making comment:\n${comment}`)
-    octokit.issues.createComment({
-      ...context.repo,
-      issue_number: pull_number,
-      body: comment
+    core.info(`making comment:\n${commentBody}`)
+    octokit.paginate(octokit.issues.listComments, { ...context.repo, issue_number: pull_number })
+    .then(comments => {
+      const comment = comments.find(comment => { comment.body.includes('<!-- version-bot-comment: release-notes -->') })?.id
+      if (comment == undefined) {
+        octokit.issues.createComment({
+          ...context.repo,
+          issue_number: pull_number,
+          body: commentBody
+        })
+      } else {
+        octokit.issues.updateComment({
+          ...context.repo,
+          issue_number: pull_number,
+          comment_id: comment,
+          body: commentBody
+        })
+      }
     })
+    
     octokit.issues.addLabels({
       ...context.repo,
       issue_number: pull_number,
-      body: comment,
       labels: analysis.labels
     })
     core.setOutput('change_analysis.json',JSON.stringify(analysis))

@@ -5,6 +5,9 @@ runs:
   using: 'node12'
   main: 'dist/index.js'
 inputs:
-  githubToken:
+  token:
     description: 'Github Token to allow the bot to comment on pull requests'
-    required: true
+    default: ${{ github.token }}
+  do-release:
+    description: 'test'
+    default: false

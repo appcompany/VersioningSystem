@@ -52,3 +52,27 @@ export function analyze(list: string) : Analysis {
     internalChangelog: changelog(changes, SectionType.internal)
   }
 }
+
+export function generateComment(analysis: Analysis) : string {
+  return `
+      ${(() => {
+        if (analysis.versionBump == VersionIncrease.none) {
+          return 'This pull request will currently not cause a release to be created, but can still be merged.'
+        } else {
+          return 'This pull request contains releasable changes.\nYou can release a new version with `/release`.'
+        }
+      })()}
+      #### Version Details
+      *${analysis.currentVersion.display}* -> **${analysis.nextVersion.display}**
+
+      ### Release Changes
+      \`\`\`
+      ${analysis.releaseChangelog.trim().length > 0 ? analysis.releaseChangelog.trim() : 'no changes'}
+      \`\`\`
+      ### Internal Changes
+      \`\`\`
+      ${analysis.internalChangelog.trim().length > 0 ? analysis.internalChangelog.trim() : 'no changes'}
+      \`\`\`
+      <!-- version-bot-comment: release-notes -->
+    `.split('\n').map(line => line.trim()).join('\n').trim()
+}
