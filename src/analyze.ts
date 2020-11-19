@@ -1,5 +1,5 @@
-import { sections, ChangelogSection } from './changelog'
-import { VersionIncrease } from './main'
+import { sections, ChangelogSection, changelog, SectionType } from './changelog'
+import { currentVersion, nextVersion, Version, VersionIncrease } from './versions';
 
 export function extractList(body: string) : string {
   var inList = false
@@ -11,19 +11,35 @@ export function extractList(body: string) : string {
   }).join('\n')
 }
 
-interface AnalyzeResult {
+export interface AnalyzeChange {
   section: ChangelogSection | undefined
   content: string
 }
 
-export function analyze(list: string) {
-  var versionIncrease : VersionIncrease | undefined
-  const changes : AnalyzeResult[] = list.split('\n')
+export interface Analysis {
+  versionBump: VersionIncrease
+  changes: AnalyzeChange[]
+  currentVersion: Version
+  nextVersion: Version
+  releaseChangelog: string
+  internalChangelog: string
+}
+
+export function analyze(list: string) : Analysis {
+  const changes : AnalyzeChange[] = list.split('\n')
     .map(line => {
       const section = sections.find(section => section.tags.includes(line.match(/([^[]+(?=]->))/g)?.join('') ?? ''))
       const content = line.split(']->')[1].trim().replace(/\.+$/,'')
       return { section, content }
     })
-  const changeIncreases = changes.map(change => change.section?.increases).sort()
-  console.log(changeIncreases)
+  const current = currentVersion()
+  const increase = changes.map(change => change.section?.increases).sort()[0] ?? VersionIncrease.none
+  return {
+    versionBump: increase,
+    changes,
+    currentVersion: current,
+    nextVersion: nextVersion(current,increase),
+    releaseChangelog: changelog(changes, SectionType.release),
+    internalChangelog: changelog(changes, SectionType.internal)
+  }
 }

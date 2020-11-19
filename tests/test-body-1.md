@@ -7,7 +7,7 @@ Some changes were made.
 <!-- changes-begin (do no remove this line) -->
 ```
 [fix]->         the login button now works
-[feat]->        addded a new button to logout
+[feat]->        added a new button to logout
 [lang]->        added the Dutch language.
 [lang(fix)]->   Fixed a typo in the German translation
 ```

@@ -11,7 +11,7 @@ describe('Analyzing', () => {
     const result = lib.extractList(testBodyOne)
     const expected = `
       [fix]->         the login button now works
-      [feat]->        addded a new button to logout
+      [feat]->        added a new button to logout
       [lang]->        added the Dutch language.
       [lang(fix)]->   Fixed a typo in the German translation
     `
@@ -19,6 +19,22 @@ describe('Analyzing', () => {
   })
   it('should analyze list correctly', () => {
     const result = lib.analyze(lib.extractList(testBodyOne))
-    console.log(result)
+    expect(result.currentVersion.display).to.equal('0.0.1')
+    expect(result.nextVersion.display).to.equal('0.1.0')
+    expect(result.changes.length).to.equal(4)
+    expect(result.releaseChangelog).to.equal(`
+      New Features
+      - the login button now works
+
+      Bug Fixes
+      - added a new button to logout
+
+      Languages
+      - added the Dutch language
+
+      Language Fixes
+      - fixed a typo in the German translation
+    `.split('\n').map(line => line.trim()).join('\n').trim() + '\n')
+    expect(result.internalChangelog).to.equal('')
   })
 })

@@ -1336,6 +1336,68 @@ exports.Context = Context;
 
 /***/ }),
 
+/***/ 82:
+/***/ (function(__unusedmodule, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.changelog = exports.sections = exports.ChangelogSection = exports.SectionType = void 0;
+const versions_1 = __webpack_require__(332);
+var SectionType;
+(function (SectionType) {
+    SectionType["release"] = "release";
+    SectionType["internal"] = "internal";
+})(SectionType = exports.SectionType || (exports.SectionType = {}));
+class ChangelogSection {
+    constructor(name, tags, type, increases = versions_1.VersionIncrease.none, hide = false) {
+        this.tags = tags;
+        this.displayName = name;
+        this.type = type;
+        this.increases = increases;
+        this.hide = hide;
+    }
+}
+exports.ChangelogSection = ChangelogSection;
+// ordered list of changelog sections
+exports.sections = [
+    new ChangelogSection('New Features', ['bug', 'bugfix', 'fix'], SectionType.release, versions_1.VersionIncrease.minor),
+    new ChangelogSection('Bug Fixes', ['feat', 'feature', 'new-feat', 'new-feature'], SectionType.release, versions_1.VersionIncrease.patch),
+    new ChangelogSection('Changes', ['change', 'refactor', 'changes'], SectionType.release, versions_1.VersionIncrease.minor),
+    new ChangelogSection('Languages', ['lang', 'language', 'new-lang', 'new-language'], SectionType.release, versions_1.VersionIncrease.minor),
+    new ChangelogSection('Language Fixes', ['lang-fix', 'lang(fix)', 'langfix', 'fix-lang'], SectionType.release, versions_1.VersionIncrease.patch),
+    new ChangelogSection('Metadata', ['meta', 'metadata'], SectionType.release, versions_1.VersionIncrease.patch, true),
+    new ChangelogSection('Documentation', ['docs', 'doc'], SectionType.internal),
+    new ChangelogSection('Build System', ['ci', 'build-system', 'build'], SectionType.internal),
+    new ChangelogSection('Tests', ['test', 'testing'], SectionType.internal),
+    new ChangelogSection('Miscellaneous', ['misc', 'chore'], SectionType.internal)
+];
+const lowercase = (input) => input.charAt(0).toLowerCase() + input.slice(1);
+function changelog(changes, type) {
+    var text = [];
+    for (const section of exports.sections.filter(section => section.type == type)) {
+        if (section.hide)
+            continue;
+        var foundOne = false;
+        for (const change of changes) {
+            if (change.section == section) {
+                if (!foundOne) {
+                    text.push(`${section.displayName}`);
+                    foundOne = true;
+                }
+                text.push(`- ${lowercase(change.content)}`);
+            }
+        }
+        if (foundOne)
+            text.push('');
+    }
+    return text.join('\n');
+}
+exports.changelog = changelog;
+
+
+/***/ }),
+
 /***/ 87:
 /***/ (function(module) {
 
@@ -1379,6 +1441,8 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 const core = __importStar(__webpack_require__(186));
 const github = __importStar(__webpack_require__(438));
+const analyze_1 = __webpack_require__(920);
+const versions_1 = __webpack_require__(332);
 function run() {
     var _a;
     return __awaiter(this, void 0, void 0, function* () {
@@ -1389,20 +1453,25 @@ function run() {
                 return;
             }
             const pull_number = context.payload.pull_request.number;
-            const octokit = github.getOctokit(core.getInput('githubToken'));
-            core.info((_a = context.payload.pull_request.body) !== null && _a !== void 0 ? _a : '');
-            // octokit.issues.createComment({
-            //   ...context.repo,
-            //   issue_number: pull_request_number,
-            //   body: 'this is a test message.'
-            // })
+            const pullRequestBody = (_a = context.payload.pull_request.body) !== null && _a !== void 0 ? _a : '';
+            const token = core.getInput('githubToken');
+            const octokit = github.getOctokit(token);
+            const analysis = analyze_1.analyze(analyze_1.extractList(pullRequestBody));
+            if (analysis.versionBump == versions_1.VersionIncrease.none) {
+                octokit.issues.createComment(Object.assign(Object.assign({}, context.repo), { issue_number: pull_number, body: `This pull request will currently not cause a release to be created, but can still be merged.
+
+        ` }));
+            }
+            else {
+            }
         }
         catch (error) {
             core.setFailed(error.message);
         }
     });
 }
-run();
+if (!process.env.TESTING)
+    run();
 
 
 /***/ }),
@@ -2352,6 +2421,61 @@ exports.isPlainObject = isPlainObject;
 /***/ (function(module, __unusedexports, __webpack_require__) {
 
 module.exports = __webpack_require__(219);
+
+
+/***/ }),
+
+/***/ 332:
+/***/ (function(__unusedmodule, exports) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.nextVersion = exports.currentVersion = exports.Version = exports.increaseOrder = exports.VersionIncrease = void 0;
+var VersionIncrease;
+(function (VersionIncrease) {
+    VersionIncrease["major"] = "major";
+    VersionIncrease["minor"] = "minor";
+    VersionIncrease["patch"] = "patch";
+    VersionIncrease["none"] = "none";
+})(VersionIncrease = exports.VersionIncrease || (exports.VersionIncrease = {}));
+exports.increaseOrder = [
+    VersionIncrease.major, VersionIncrease.minor, VersionIncrease.patch, VersionIncrease.none
+];
+class Version {
+    constructor(text) {
+        var _a, _b, _c;
+        const split = text.replace(/[^0-9.]/g, '').split('.');
+        this.major = (_a = Number(split[0])) !== null && _a !== void 0 ? _a : 0;
+        this.minor = (_b = Number(split[1])) !== null && _b !== void 0 ? _b : 0;
+        this.patch = (_c = Number(split[2])) !== null && _c !== void 0 ? _c : 1;
+    }
+    get display() {
+        return `${this.major}.${this.minor}.${this.patch}`;
+    }
+}
+exports.Version = Version;
+function currentVersion() {
+    return new Version('0.0.1');
+}
+exports.currentVersion = currentVersion;
+function nextVersion(current, increase) {
+    const nextVersion = new Version(current.display);
+    if (increase == VersionIncrease.patch) {
+        nextVersion.patch += 1;
+    }
+    if (increase == VersionIncrease.minor) {
+        nextVersion.patch = 0;
+        nextVersion.minor += 1;
+    }
+    if (increase == VersionIncrease.major) {
+        nextVersion.patch = 0;
+        nextVersion.minor = 0;
+        nextVersion.major += 1;
+    }
+    return nextVersion;
+}
+exports.nextVersion = nextVersion;
 
 
 /***/ }),
@@ -5386,6 +5510,56 @@ function getApiBaseUrl() {
 }
 exports.getApiBaseUrl = getApiBaseUrl;
 //# sourceMappingURL=utils.js.map
+
+/***/ }),
+
+/***/ 920:
+/***/ (function(__unusedmodule, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.analyze = exports.extractList = void 0;
+const changelog_1 = __webpack_require__(82);
+const versions_1 = __webpack_require__(332);
+function extractList(body) {
+    var inList = false;
+    return body.split('\n').map(line => line.trim()).filter(line => {
+        if (!inList && line.indexOf('changes-begin') > -1) {
+            inList = true;
+            return false;
+        }
+        if (inList && line.indexOf('changes-end') > -1) {
+            inList = false;
+            return false;
+        }
+        if (inList && line != '```')
+            return true;
+        return false;
+    }).join('\n');
+}
+exports.extractList = extractList;
+function analyze(list) {
+    var _a;
+    const changes = list.split('\n')
+        .map(line => {
+        const section = changelog_1.sections.find(section => { var _a, _b; return section.tags.includes((_b = (_a = line.match(/([^[]+(?=]->))/g)) === null || _a === void 0 ? void 0 : _a.join('')) !== null && _b !== void 0 ? _b : ''); });
+        const content = line.split(']->')[1].trim().replace(/\.+$/, '');
+        return { section, content };
+    });
+    const current = versions_1.currentVersion();
+    const increase = (_a = changes.map(change => { var _a; return (_a = change.section) === null || _a === void 0 ? void 0 : _a.increases; }).sort()[0]) !== null && _a !== void 0 ? _a : versions_1.VersionIncrease.none;
+    return {
+        versionBump: increase,
+        changes,
+        currentVersion: current,
+        nextVersion: versions_1.nextVersion(current, increase),
+        releaseChangelog: changelog_1.changelog(changes, changelog_1.SectionType.release),
+        internalChangelog: changelog_1.changelog(changes, changelog_1.SectionType.internal)
+    };
+}
+exports.analyze = analyze;
+
 
 /***/ }),
 
