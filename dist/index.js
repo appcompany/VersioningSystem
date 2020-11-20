@@ -1457,21 +1457,36 @@ function run() {
             const octokit = github.getOctokit(token);
             const analysis = analyze_1.analyze(analyze_1.extractList(pullRequestBody));
             const commentBody = analyze_1.generateComment(analysis);
-            core.info(`making comment:\n${commentBody}`);
             octokit.paginate(octokit.issues.listComments, Object.assign(Object.assign({}, context.repo), { issue_number: pull_number }))
                 .then(comments => {
                 var _a;
-                core.info(JSON.stringify(comments));
                 const comment = (_a = comments.find(comment => comment.body.includes('<!-- version-bot-comment: release-notes -->'))) === null || _a === void 0 ? void 0 : _a.id;
-                core.info(`${comment}`);
                 if (comment == undefined) {
-                    octokit.issues.createComment(Object.assign(Object.assign({}, context.repo), { issue_number: pull_number, body: commentBody }));
+                    octokit.issues.createComment(Object.assign(Object.assign({}, context.repo), { issue_number: pull_number, body: commentBody }))
+                        .then(() => {
+                        core.info('commented on pull request.');
+                    })
+                        .catch(err => {
+                        core.setFailed(`unable to create comment on pull request. reason: ${err}`);
+                    });
                 }
                 else {
-                    octokit.issues.updateComment(Object.assign(Object.assign({}, context.repo), { issue_number: pull_number, comment_id: comment, body: commentBody }));
+                    octokit.issues.updateComment(Object.assign(Object.assign({}, context.repo), { issue_number: pull_number, comment_id: comment, body: commentBody }))
+                        .then(() => {
+                        core.info('updated comment on pull request.');
+                    })
+                        .catch(err => {
+                        core.setFailed(`unable to update comment on pull request. reason: ${err}`);
+                    });
                 }
             });
-            octokit.issues.addLabels(Object.assign(Object.assign({}, context.repo), { issue_number: pull_number, labels: analysis.labels }));
+            octokit.issues.addLabels(Object.assign(Object.assign({}, context.repo), { issue_number: pull_number, labels: analysis.labels }))
+                .then(() => {
+                core.info('set labels on pull request.');
+            })
+                .catch(err => {
+                core.setFailed(`unable to set labels on pull request. reason: ${err}`);
+            });
             core.setOutput('change_analysis.json', JSON.stringify(analysis));
         }
         catch (error) {

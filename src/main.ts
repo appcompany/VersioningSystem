@@ -20,17 +20,20 @@ async function run() {
     const analysis = analyze(extractList(pullRequestBody))
     const commentBody = generateComment(analysis)
 
-    core.info(`making comment:\n${commentBody}`)
     octokit.paginate(octokit.issues.listComments, { ...context.repo, issue_number: pull_number })
     .then(comments => {
-      core.info(JSON.stringify(comments))
       const comment = comments.find(comment => comment.body.includes('<!-- version-bot-comment: release-notes -->'))?.id
-      core.info(`${comment}`)
       if (comment == undefined) {
         octokit.issues.createComment({
           ...context.repo,
           issue_number: pull_number,
           body: commentBody
+        })
+        .then(() => {
+          core.info('commented on pull request.')
+        })
+        .catch(err => {
+          core.setFailed(`unable to create comment on pull request. reason: ${err}`)
         })
       } else {
         octokit.issues.updateComment({
@@ -39,6 +42,12 @@ async function run() {
           comment_id: comment,
           body: commentBody
         })
+        .then(() => {
+          core.info('updated comment on pull request.')
+        })
+        .catch(err => {
+          core.setFailed(`unable to update comment on pull request. reason: ${err}`)
+        })
       }
     })
     
@@ -46,6 +55,12 @@ async function run() {
       ...context.repo,
       issue_number: pull_number,
       labels: analysis.labels
+    })
+    .then(() => {
+      core.info('set labels on pull request.')
+    })
+    .catch(err => {
+      core.setFailed(`unable to set labels on pull request. reason: ${err}`)
     })
     core.setOutput('change_analysis.json',JSON.stringify(analysis))
 
