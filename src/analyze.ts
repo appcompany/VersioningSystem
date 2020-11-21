@@ -42,7 +42,7 @@ export function analyze(list: string) : Analysis {
     }
   }
   labels = labels.filter(tag => tag != '')
-  if (increase != VersionIncrease.none) labels.push('can-release')
+  if (increase != VersionIncrease.none) labels.push('releasable')
   return {
     versionBump: increase,
     changes, labels,

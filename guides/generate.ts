@@ -42,3 +42,20 @@ one change per line and always follow the following template:
 ${table.map(row => '| ' + row.join(' | ') + ' |').join('\n')}
 `)
 
+
+const testPath = resolve(__dirname + '/../tests/tags-test.md')
+var test : string[] = []
+
+for (const section of sections) {
+  for (const tag of section.tags) {
+    test.push(`[${tag}]-> test statement.`)
+  }
+}
+
+writeFileSync(testPath, `
+<!-- changes-begin (do no remove this line) -->
+\`\`\`
+${test.join('\n')}
+\`\`\`
+<!-- changes-end (do not remove this line -->
+`.split('\n').map(line => line.trim()).join('\n'))

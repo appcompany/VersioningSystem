@@ -3,8 +3,10 @@ import { resolve } from 'path'
 import { expect } from 'chai'
 
 import * as lib from './analyze';
+import { sections } from './changelog';
 
 const testBodyOne = readFileSync(resolve(__dirname + '/../tests/test-body-1.md')).toString()
+const testTags = readFileSync(resolve(__dirname + '/../tests/tags-test.md')).toString()
 
 describe('Analyzing', () => {
   it('should extract list correctly', () => {
@@ -40,6 +42,14 @@ describe('Analyzing', () => {
     expect(result.labels).to.contain('bug')
     expect(result.labels).to.contain('feature')
     expect(result.labels).to.contain('language-fix')
-    expect(result.labels).to.contain('can-release')
+    expect(result.labels).to.contain('releasable')
   })
+
+  const tagsResult = lib.analyze(lib.extractList(testTags))
+  for (const section of sections) {
+    it(`should detect all ${section.displayName} tags`, () => {
+      expect(tagsResult.changes.filter(change => change.section == section).length).to.equal(section.tags.length)
+    })
+  }
+
 })

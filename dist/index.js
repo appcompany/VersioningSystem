@@ -5581,7 +5581,7 @@ function analyze(list) {
     }
     labels = labels.filter(tag => tag != '');
     if (increase != versions_1.VersionIncrease.none)
-        labels.push('can-release');
+        labels.push('releasable');
     return {
         versionBump: increase,
         changes, labels,
