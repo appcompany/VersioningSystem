@@ -20,14 +20,14 @@ async function run() {
     const analysis = analyze(extractList(pullRequestBody))
     const commentBody = generateComment(analysis)
 
+    const data = (await octokit.pulls.get({ ...context.repo, pull_number })).data
     const comments = await octokit.paginate(octokit.issues.listComments, { ...context.repo, issue_number: pull_number })
     const releaseComment = comments.find(comment => comment.body.includes('<!-- version-bot-comment: release-notes -->'))?.id
-    const shouldRelease = comments.find(comment => comment.body.includes('/release')) != undefined
-    const targetBranch = (await octokit.pulls.get({ ...context.repo, pull_number })).data.base.ref
+    const shouldRelease = data.labels.map(label => label.name).includes('ready')
+    const targetBranch = data.base.ref
+    
     // const didMerge = (await octokit.pulls.checkIfMerged({ ...context.repo, pull_number })).data
     const didMerge = false
-    
-    core.info(targetBranch)
 
     if (releaseComment != undefined && shouldRelease && !didMerge) {
       octokit.pulls.merge({
