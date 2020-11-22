@@ -1461,7 +1461,8 @@ function run() {
             const releaseComment = (_b = comments.find(comment => comment.body.includes('<!-- version-bot-comment: release-notes -->'))) === null || _b === void 0 ? void 0 : _b.id;
             const shouldRelease = comments.find(comment => comment.body.includes('/release')) != undefined;
             const targetBranch = (yield octokit.pulls.get(Object.assign(Object.assign({}, context.repo), { pull_number }))).data.base.ref;
-            const didMerge = yield octokit.pulls.checkIfMerged(Object.assign(Object.assign({}, context.repo), { pull_number }));
+            // const didMerge = (await octokit.pulls.checkIfMerged({ ...context.repo, pull_number })).data
+            const didMerge = false;
             core.info(targetBranch);
             if (releaseComment != undefined && shouldRelease && !didMerge) {
                 octokit.pulls.merge(Object.assign(Object.assign({}, context.repo), { pull_number, commit_title: `v${analysis.nextVersion.display}${targetBranch == 'main' ? '' : `-${targetBranch}`}`, commit_message: `${analysis.releaseChangelog}\n${analysis.internalChangelog}` }));

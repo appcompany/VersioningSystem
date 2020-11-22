@@ -24,7 +24,8 @@ async function run() {
     const releaseComment = comments.find(comment => comment.body.includes('<!-- version-bot-comment: release-notes -->'))?.id
     const shouldRelease = comments.find(comment => comment.body.includes('/release')) != undefined
     const targetBranch = (await octokit.pulls.get({ ...context.repo, pull_number })).data.base.ref
-    const didMerge = await octokit.pulls.checkIfMerged({ ...context.repo, pull_number })
+    // const didMerge = (await octokit.pulls.checkIfMerged({ ...context.repo, pull_number })).data
+    const didMerge = false
     
     core.info(targetBranch)
 
