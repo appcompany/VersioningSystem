@@ -65,7 +65,7 @@ export function generateComment(analysis: Analysis) : string {
       #### Version Details
       *${analysis.currentVersion.display}* -> **${analysis.nextVersion.display}**
 
-      ### Release Changes
+      ### App Store Preview
       \`\`\`
       ${analysis.releaseChangelog.trim().length > 0 ? analysis.releaseChangelog.trim() : 'no changes'}
       \`\`\`
