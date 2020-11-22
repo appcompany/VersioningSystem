@@ -34,7 +34,8 @@ async function run() {
         ...context.repo,
         pull_number,
         commit_title: `v${analysis.nextVersion.display}${targetBranch == 'main' ? '' : `-${targetBranch}`}`,
-        commit_message: `${analysis.releaseChangelog}\n${analysis.internalChangelog}`
+        commit_message: `${analysis.releaseChangelog}\n${analysis.internalChangelog}`,
+        merge_method: 'squash'
       })
     } else if (releaseComment == undefined) {
       octokit.issues.createComment({
