@@ -20,7 +20,7 @@ describe('Analyzing', () => {
     expect(result).to.equal(expected.split('\n').map(line => line.trim()).join('\n').trim())
   })
   it('should analyze list correctly', () => {
-    const result = lib.analyze(['v0.0.1','v0.1.0'], lib.extractList(testBodyOne))
+    const result = lib.analyze(['v0.0.1','v0.1.0'], 'appstore', lib.extractList(testBodyOne))
     expect(result.currentVersion.display).to.equal('0.1.0')
     expect(result.nextVersion.display).to.equal('0.2.0')
     expect(result.changes.length).to.equal(4)
@@ -45,7 +45,7 @@ describe('Analyzing', () => {
     expect(result.labels).to.contain('releasable')
   })
 
-  const tagsResult = lib.analyze(['v0.0.1'], lib.extractList(testTags))
+  const tagsResult = lib.analyze(['v0.0.1'], 'appstore', lib.extractList(testTags))
   for (const section of sections) {
     it(`should detect all ${section.displayName} tags`, () => {
       expect(tagsResult.changes.filter(change => change.section == section).length).to.equal(section.tags.length)

@@ -11,6 +11,9 @@ const increasedVersionMatrix = [
 ]
 
 describe('Versions', () => {
+  it('default should be 0.0.1', () => {
+    expect(lib.currentVersion([]).display).to.equal('0.0.1')
+  })
   it('should have correct current version', () => {
     expect(lib.currentVersion(['v0.0.1','v0.1.0','v0.1.1']).display).to.equal('0.1.1')
     expect(lib.currentVersion(['v0.0.1','v2.0.1','v0.1.0','v0.1.1']).display).to.equal('2.0.1')

@@ -20,9 +20,9 @@ export class Version {
 
   constructor(text: string) {
     const split = text.replace(/[^0-9.]/g,'').split('.')
-    this.major = Number(split[0]) ?? 0
-    this.minor = Number(split[1]) ?? 0
-    this.patch = Number(split[2]) ?? 1
+    this.major = Number(split[0] ?? '0') ?? 0
+    this.minor = Number(split[1] ?? '0') ?? 0
+    this.patch = Number(split[2] ?? '0') ?? 0
   }
 
 }
@@ -41,7 +41,7 @@ export function currentVersion(releases: string[]) : Version {
     else if (lhs.major < rhs.major) return 1
     else if (lhs.major > rhs.major) return -1
     return 0
-  })[0]
+  })[0] ?? new Version('0.0.1')
 }
 
 export function nextVersion(current: Version, increase: VersionIncrease) : Version {

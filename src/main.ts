@@ -31,18 +31,17 @@ async function run() {
     const shouldRelease = data.labels.map(label => label.name).includes('ready')
     const targetBranch = data.base.ref
 
-    const analysis = analyze(releases.filter(release => !release.prerelease).map(release => release.tag_name) ,extractList(pullRequestBody))
+    const analysis = analyze(releases.filter(release => !release.prerelease).map(release => release.tag_name), targetBranch, extractList(pullRequestBody))
     const commentBody = generateComment(targetBranch, analysis)
     const didMerge : boolean = data.merged
 
     core.info(`didMerge: ${didMerge}`)
 
     if (releaseComment != undefined && shouldRelease && !didMerge) {
-      const versionTag = `v${analysis.nextVersion.display}${targetBranch == 'appstore' ? '' : `-${targetBranch}`}`
       octokit.pulls.merge({
         ...context.repo,
         pull_number,
-        commit_title: versionTag,
+        commit_title: analysis.nextTag,
         commit_message: `${analysis.releaseChangelog}\n${analysis.internalChangelog}`.trim(),
         merge_method: 'squash'
       })
@@ -50,14 +49,14 @@ async function run() {
         core.info(`merged into release stream ${targetBranch}`)
         octokit.repos.createRelease({
           ...context.repo,
-          tag_name: versionTag,
+          tag_name: analysis.nextTag,
           name: versionName(releases.map(release => release.name)),
           body: analysis.releaseChangelog,
           prerelease: targetBranch == 'appstore' ? false : true,
           target_commitish: targetBranch
         })
         .then(() => {
-          core.info(`created release ${versionTag}`)
+          core.info(`created release ${analysis.nextTag}`)
         })
         .catch(err => {
           core.setFailed(`unable to create release. reason: ${err}`)

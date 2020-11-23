@@ -1470,18 +1470,17 @@ function run() {
             const releaseComment = (_b = comments.find(comment => comment.body.includes('<!-- version-bot-comment: release-notes -->'))) === null || _b === void 0 ? void 0 : _b.id;
             const shouldRelease = data.labels.map(label => label.name).includes('ready');
             const targetBranch = data.base.ref;
-            const analysis = analyze_1.analyze(releases.filter(release => !release.prerelease).map(release => release.tag_name), analyze_1.extractList(pullRequestBody));
+            const analysis = analyze_1.analyze(releases.filter(release => !release.prerelease).map(release => release.tag_name), targetBranch, analyze_1.extractList(pullRequestBody));
             const commentBody = analyze_1.generateComment(targetBranch, analysis);
             const didMerge = data.merged;
             core.info(`didMerge: ${didMerge}`);
             if (releaseComment != undefined && shouldRelease && !didMerge) {
-                const versionTag = `v${analysis.nextVersion.display}${targetBranch == 'appstore' ? '' : `-${targetBranch}`}`;
-                octokit.pulls.merge(Object.assign(Object.assign({}, context.repo), { pull_number, commit_title: versionTag, commit_message: `${analysis.releaseChangelog}\n${analysis.internalChangelog}`.trim(), merge_method: 'squash' }))
+                octokit.pulls.merge(Object.assign(Object.assign({}, context.repo), { pull_number, commit_title: analysis.nextTag, commit_message: `${analysis.releaseChangelog}\n${analysis.internalChangelog}`.trim(), merge_method: 'squash' }))
                     .then(() => {
                     core.info(`merged into release stream ${targetBranch}`);
-                    octokit.repos.createRelease(Object.assign(Object.assign({}, context.repo), { tag_name: versionTag, name: versionName(releases.map(release => release.name)), body: analysis.releaseChangelog, prerelease: targetBranch == 'appstore' ? false : true, target_commitish: targetBranch }))
+                    octokit.repos.createRelease(Object.assign(Object.assign({}, context.repo), { tag_name: analysis.nextTag, name: versionName(releases.map(release => release.name)), body: analysis.releaseChangelog, prerelease: targetBranch == 'appstore' ? false : true, target_commitish: targetBranch }))
                         .then(() => {
-                        core.info(`created release ${versionTag}`);
+                        core.info(`created release ${analysis.nextTag}`);
                     })
                         .catch(err => {
                         core.setFailed(`unable to create release. reason: ${err}`);
@@ -2497,11 +2496,11 @@ exports.increaseOrder = [
 ];
 class Version {
     constructor(text) {
-        var _a, _b, _c;
+        var _a, _b, _c, _d, _e, _f;
         const split = text.replace(/[^0-9.]/g, '').split('.');
-        this.major = (_a = Number(split[0])) !== null && _a !== void 0 ? _a : 0;
-        this.minor = (_b = Number(split[1])) !== null && _b !== void 0 ? _b : 0;
-        this.patch = (_c = Number(split[2])) !== null && _c !== void 0 ? _c : 1;
+        this.major = (_b = Number((_a = split[0]) !== null && _a !== void 0 ? _a : '0')) !== null && _b !== void 0 ? _b : 0;
+        this.minor = (_d = Number((_c = split[1]) !== null && _c !== void 0 ? _c : '0')) !== null && _d !== void 0 ? _d : 0;
+        this.patch = (_f = Number((_e = split[2]) !== null && _e !== void 0 ? _e : '0')) !== null && _f !== void 0 ? _f : 0;
     }
     get display() {
         return `${this.major}.${this.minor}.${this.patch}`;
@@ -2509,7 +2508,8 @@ class Version {
 }
 exports.Version = Version;
 function currentVersion(releases) {
-    return releases.filter(release => !release.includes('-')).map(release => new Version(release)).sort((lhs, rhs) => {
+    var _a;
+    return (_a = releases.filter(release => !release.includes('-')).map(release => new Version(release)).sort((lhs, rhs) => {
         if (lhs.major == rhs.major) {
             if (lhs.minor == rhs.minor) {
                 if (lhs.patch == rhs.patch)
@@ -2529,7 +2529,7 @@ function currentVersion(releases) {
         else if (lhs.major > rhs.major)
             return -1;
         return 0;
-    })[0];
+    })[0]) !== null && _a !== void 0 ? _a : new Version('0.0.1');
 }
 exports.currentVersion = currentVersion;
 function nextVersion(current, increase) {
@@ -5621,7 +5621,7 @@ function extractList(body) {
     }).join('\n');
 }
 exports.extractList = extractList;
-function analyze(releases, list) {
+function analyze(releases, targetBranch, list) {
     var _a, _b, _c, _d, _e;
     const changes = list.split('\n')
         .map(line => {
@@ -5640,11 +5640,13 @@ function analyze(releases, list) {
     labels = labels.filter(tag => tag != '');
     if (increase != versions_1.VersionIncrease.none)
         labels.push('releasable');
+    const next = versions_1.nextVersion(current, increase);
     return {
         versionBump: increase,
         changes, labels,
         currentVersion: current,
-        nextVersion: versions_1.nextVersion(current, increase),
+        nextVersion: next,
+        nextTag: `v${next.display}${targetBranch == 'appstore' ? '' : `-${targetBranch}`}`,
         releaseChangelog: changelog_1.changelog(changes, changelog_1.SectionType.release),
         internalChangelog: changelog_1.changelog(changes, changelog_1.SectionType.internal)
     };
@@ -5657,7 +5659,7 @@ function generateComment(targetBranch, analysis) {
             return 'This pull request will currently not cause a release to be created, but can still be merged.';
         }
         else {
-            return 'This pull request contains releasable changes.\nYou can release a new version with `/release`.';
+            return 'This pull request contains releasable changes.\nYou can release a new version with the `ready` label.';
         }
     })()}
       #### Version Details

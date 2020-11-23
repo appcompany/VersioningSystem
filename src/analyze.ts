@@ -21,12 +21,13 @@ export interface Analysis {
   changes: AnalyzeChange[]
   currentVersion: Version
   nextVersion: Version
+  nextTag: string
   releaseChangelog: string
   internalChangelog: string
   labels: string[]
 }
 
-export function analyze(releases: string[], list: string) : Analysis {
+export function analyze(releases: string[], targetBranch: string, list: string) : Analysis {
   const changes : AnalyzeChange[] = list.split('\n')
     .map(line => {
       const section = sections.find(section => section.tags.includes(line.match(/([^[]+(?=]->))/g)?.join('') ?? ''))
@@ -43,11 +44,13 @@ export function analyze(releases: string[], list: string) : Analysis {
   }
   labels = labels.filter(tag => tag != '')
   if (increase != VersionIncrease.none) labels.push('releasable')
+  const next = nextVersion(current,increase)
   return {
     versionBump: increase,
     changes, labels,
     currentVersion: current,
-    nextVersion: nextVersion(current,increase),
+    nextVersion: next,
+    nextTag: `v${next.display}${targetBranch == 'appstore' ? '' : `-${targetBranch}`}`,
     releaseChangelog: changelog(changes, SectionType.release),
     internalChangelog: changelog(changes, SectionType.internal)
   }
@@ -59,7 +62,7 @@ export function generateComment(targetBranch: string, analysis: Analysis) : stri
         if (analysis.versionBump == VersionIncrease.none) {
           return 'This pull request will currently not cause a release to be created, but can still be merged.'
         } else {
-          return 'This pull request contains releasable changes.\nYou can release a new version with `/release`.'
+          return 'This pull request contains releasable changes.\nYou can release a new version with the `ready` label.'
         }
       })()}
       #### Version Details
