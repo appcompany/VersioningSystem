@@ -26,14 +26,14 @@ export interface Analysis {
   labels: string[]
 }
 
-export function analyze(list: string) : Analysis {
+export function analyze(releases: string[], list: string) : Analysis {
   const changes : AnalyzeChange[] = list.split('\n')
     .map(line => {
       const section = sections.find(section => section.tags.includes(line.match(/([^[]+(?=]->))/g)?.join('') ?? ''))
       const content = line.split(']->')[1].trim().replace(/\.+$/,'')
       return { section, content }
     })
-  const current = currentVersion()
+  const current = currentVersion(releases)
   const increase = changes.map(change => change.section?.increases).sort()[0] ?? VersionIncrease.none
   var labels : string[] = []
   for (const change of changes) {
@@ -53,7 +53,7 @@ export function analyze(list: string) : Analysis {
   }
 }
 
-export function generateComment(analysis: Analysis) : string {
+export function generateComment(targetBranch: string, analysis: Analysis) : string {
   return `
       ${(() => {
         if (analysis.versionBump == VersionIncrease.none) {
@@ -63,6 +63,7 @@ export function generateComment(analysis: Analysis) : string {
         }
       })()}
       #### Version Details
+      Release Stream: ${targetBranch}
       *${analysis.currentVersion.display}* -> **${analysis.nextVersion.display}**
 
       ### App Store Preview

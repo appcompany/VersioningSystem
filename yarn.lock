@@ -1223,6 +1223,11 @@ typescript@^4.0.5:
   resolved "https://registry.yarnpkg.com/typescript/-/typescript-4.0.5.tgz#ae9dddfd1069f1cb5beb3ef3b2170dd7c1332389"
   integrity sha512-ywmr/VrTVCmNTJ6iV2LwIrfG1P+lv6luD8sUJs+2eI9NLGigaN+nUQc13iHqisq7bra9lnmUSYqbJvegraBOPQ==
 
+unique-names-generator@^4.3.1:
+  version "4.3.1"
+  resolved "https://registry.yarnpkg.com/unique-names-generator/-/unique-names-generator-4.3.1.tgz#f61ec2290b2f865894af01afb40f3e1043bb8fa2"
+  integrity sha512-oxkKrDXbwx6I5M963SdfmMH2t8n1OIfYyzoJ25BmDeETlyWAZjTbMXwIEMiQDex4lkD2pqe+9gxDJQAB2IOfDg==
+
 universal-user-agent@^6.0.0:
   version "6.0.0"
   resolved "https://registry.yarnpkg.com/universal-user-agent/-/universal-user-agent-6.0.0.tgz#3381f8503b251c0d9cd21bc1de939ec9df5480ee"

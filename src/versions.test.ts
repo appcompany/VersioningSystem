@@ -11,6 +11,11 @@ const increasedVersionMatrix = [
 ]
 
 describe('Versions', () => {
+  it('should have correct current version', () => {
+    expect(lib.currentVersion(['v0.0.1','v0.1.0','v0.1.1']).display).to.equal('0.1.1')
+    expect(lib.currentVersion(['v0.0.1','v2.0.1','v0.1.0','v0.1.1']).display).to.equal('2.0.1')
+    expect(lib.currentVersion(['v0.0.1','v2.0.1','v0.1.0','v0.1.1','v3.0.0-alpha']).display).to.equal('2.0.1')
+  })
   it('should convert string to version correctly', () => {
     expect(JSON.stringify(new lib.Version('1.2.3'))).to.equal('{"major":1,"minor":2,"patch":3}')
     expect(JSON.stringify(new lib.Version('v1.2.3'))).to.equal('{"major":1,"minor":2,"patch":3}')

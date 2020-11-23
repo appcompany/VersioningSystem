@@ -1,5 +1,3 @@
-import { Analysis } from "./analyze";
-
 export enum VersionIncrease {
   major = 'major',
   minor = 'minor',
@@ -13,7 +11,7 @@ export const increaseOrder : VersionIncrease[] = [
 
 export class Version {
   major: number
-  minor: number
+  minor: number 
   patch: number
 
   get display(): string {
@@ -29,8 +27,21 @@ export class Version {
 
 }
 
-export function currentVersion() : Version {
-  return new Version('0.0.1')
+export function currentVersion(releases: string[]) : Version {
+  return releases.filter(release => !release.includes('-')).map(release => new Version(release)).sort((lhs,rhs) => {
+    if (lhs.major == rhs.major) {
+      if (lhs.minor == rhs.minor) {
+        if (lhs.patch == rhs.patch) return 0
+        if (lhs.patch < rhs.patch) return 1
+        if (lhs.patch > rhs.patch) return -1
+      } 
+      else if (lhs.minor < rhs.minor) return 1
+      else if (lhs.minor > rhs.minor) return -1
+    }
+    else if (lhs.major < rhs.major) return 1
+    else if (lhs.major > rhs.major) return -1
+    return 0
+  })[0]
 }
 
 export function nextVersion(current: Version, increase: VersionIncrease) : Version {

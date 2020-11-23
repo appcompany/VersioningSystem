@@ -1,10 +1,13 @@
 import * as core from '@actions/core'
 import * as github from '@actions/github' 
-import { should } from 'chai'
 import { analyze, extractList, generateComment } from './analyze'
+import { uniqueNamesGenerator, adjectives, colors, animals } from 'unique-names-generator'
 
-const token = core.getInput('token')
-const octokit = github.getOctokit(token)
+function versionName(used: string[]) : string {
+  const randomName = uniqueNamesGenerator({ dictionaries: [adjectives, colors, animals] });
+  if (used.includes(randomName)) return versionName(used)
+  else return randomName
+}
 
 async function run() {
   try {
@@ -14,28 +17,54 @@ async function run() {
       return
     }
 
+    const token = core.getInput('token')
+    const octokit = github.getOctokit(token)
+
     const pull_number = context.payload.pull_request.number
     const pullRequestBody = context.payload.pull_request.body ?? ''
 
-    const analysis = analyze(extractList(pullRequestBody))
-    const commentBody = generateComment(analysis)
-
+    const releases = await octokit.paginate(octokit.repos.listReleases, { ...context.repo })
+    releases
     const data = (await octokit.pulls.get({ ...context.repo, pull_number })).data
     const comments = await octokit.paginate(octokit.issues.listComments, { ...context.repo, issue_number: pull_number })
     const releaseComment = comments.find(comment => comment.body.includes('<!-- version-bot-comment: release-notes -->'))?.id
     const shouldRelease = data.labels.map(label => label.name).includes('ready')
     const targetBranch = data.base.ref
-    
-    // const didMerge = (await octokit.pulls.checkIfMerged({ ...context.repo, pull_number })).data
-    const didMerge = false
+
+    const analysis = analyze(releases.filter(release => !release.prerelease).map(release => release.tag_name) ,extractList(pullRequestBody))
+    const commentBody = generateComment(targetBranch, analysis)
+    const didMerge = (await octokit.pulls.checkIfMerged({ ...context.repo, pull_number })).data
+
+    core.info(`didMerge: ${didMerge}`)
 
     if (releaseComment != undefined && shouldRelease && !didMerge) {
+      const versionTag = `v${analysis.nextVersion.display}${targetBranch == 'appstore' ? '' : `-${targetBranch}`}`
       octokit.pulls.merge({
         ...context.repo,
         pull_number,
-        commit_title: `v${analysis.nextVersion.display}${targetBranch == 'main' ? '' : `-${targetBranch}`}`,
-        commit_message: `${analysis.releaseChangelog}\n${analysis.internalChangelog}`,
+        commit_title: versionTag,
+        commit_message: `${analysis.releaseChangelog}\n${analysis.internalChangelog}`.trim(),
         merge_method: 'squash'
+      })
+      .then(() => {
+        core.info(`merged into release stream ${targetBranch}`)
+        octokit.repos.createRelease({
+          ...context.repo,
+          tag_name: versionTag,
+          name: versionName(releases.map(release => release.name)),
+          body: analysis.releaseChangelog,
+          prerelease: targetBranch == 'appstore' ? false : true,
+          target_commitish: targetBranch
+        })
+        .then(() => {
+          core.info(`created release ${versionTag}`)
+        })
+        .catch(err => {
+          core.setFailed(`unable to create release. reason: ${err}`)
+        })
+      })
+      .catch(err => {
+        core.setFailed(`unable to merge into release stream ${targetBranch}. reason: ${err}`)
       })
     } else if (releaseComment == undefined) {
       octokit.issues.createComment({
