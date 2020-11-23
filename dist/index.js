@@ -1472,7 +1472,7 @@ function run() {
             const targetBranch = data.base.ref;
             const analysis = analyze_1.analyze(releases.filter(release => !release.prerelease).map(release => release.tag_name), analyze_1.extractList(pullRequestBody));
             const commentBody = analyze_1.generateComment(targetBranch, analysis);
-            const didMerge = (yield octokit.pulls.checkIfMerged(Object.assign(Object.assign({}, context.repo), { pull_number }))).data;
+            const didMerge = data.merged;
             core.info(`didMerge: ${didMerge}`);
             if (releaseComment != undefined && shouldRelease && !didMerge) {
                 const versionTag = `v${analysis.nextVersion.display}${targetBranch == 'appstore' ? '' : `-${targetBranch}`}`;

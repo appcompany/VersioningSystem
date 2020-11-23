@@ -33,7 +33,7 @@ async function run() {
 
     const analysis = analyze(releases.filter(release => !release.prerelease).map(release => release.tag_name) ,extractList(pullRequestBody))
     const commentBody = generateComment(targetBranch, analysis)
-    const didMerge = (await octokit.pulls.checkIfMerged({ ...context.repo, pull_number })).data
+    const didMerge : boolean = data.merged
 
     core.info(`didMerge: ${didMerge}`)
 
