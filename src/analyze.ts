@@ -67,7 +67,7 @@ export function generateComment(targetBranch: string, analysis: Analysis) : stri
       })()}
       #### Version Details
       Release Stream: ${targetBranch}
-      *${analysis.currentVersion.display}* -> **${analysis.nextVersion.display}**
+      *${analysis.currentVersion.display}* -> **${analysis.nextTag}**
 
       ### App Store Preview
       \`\`\`

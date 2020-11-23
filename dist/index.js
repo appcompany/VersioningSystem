@@ -5664,7 +5664,7 @@ function generateComment(targetBranch, analysis) {
     })()}
       #### Version Details
       Release Stream: ${targetBranch}
-      *${analysis.currentVersion.display}* -> **${analysis.nextVersion.display}**
+      *${analysis.currentVersion.display}* -> **${analysis.nextTag}**
 
       ### App Store Preview
       \`\`\`
