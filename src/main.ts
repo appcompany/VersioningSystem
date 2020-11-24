@@ -53,13 +53,37 @@ function versionName(used: string[]) : string {
         octokit.repos.createRelease({
           ...context.repo,
           tag_name: targetBranch == 'appstore' ? analysis.nextTag : `${analysis.nextTag}/${name}`,
-          name: name,
-          body: analysis.releaseChangelog,
+          name: analysis.nextTag,
+          body: analysis.releaseChangelog.trim(),
           prerelease: targetBranch == 'appstore' ? false : true,
-          target_commitish: targetBranch
+          target_commitish: targetBranch,
+          draft: true
         })
-        .then(() => {
-          core.info(`created release ${analysis.nextTag}`)
+        .then(response => {
+          const release_id = response.data.id
+          if (release_id != undefined) {
+            core.info(`created release(${release_id}) for tag:${analysis.nextTag}`)
+            octokit.repos.uploadReleaseAsset({
+              ...context.repo, release_id,
+              name: 'analysis.json',
+              data: JSON.stringify(analysis)
+            })
+            .then(() => {
+              octokit.repos.updateRelease({
+                ...context.repo, release_id,
+                draft: false
+              })
+              .then(() => {
+                core.info(`published release: ${release_id}`)
+              })
+              .catch(err => {
+                core.setFailed(`unable to publish release. reason: ${err}`)      
+              })
+            })
+            .catch(err => {
+              core.setFailed(`unable to upload asset. reason: ${err}`)    
+            })
+          }
         })
         .catch(err => {
           core.setFailed(`unable to create release. reason: ${err}`)
