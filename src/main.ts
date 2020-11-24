@@ -54,7 +54,17 @@ function versionName(used: string[]) : string {
           ...context.repo,
           tag_name: targetBranch == 'appstore' ? analysis.nextTag : `${analysis.nextTag}/${name}`,
           name: analysis.nextTag,
-          body: analysis.releaseChangelog.trim(),
+          body: `
+            codename: ${name}
+            ## App Store Preview
+            \`\`\`
+            ${analysis.releaseChangelog.trim()}
+            \`\`\`
+            ## Internal Changes
+            \`\`\`
+            ${analysis.internalChangelog.trim()}
+            \`\`\`
+          `,
           prerelease: targetBranch == 'appstore' ? false : true,
           target_commitish: targetBranch,
           draft: true
