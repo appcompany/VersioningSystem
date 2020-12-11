@@ -1,3 +1,5 @@
+import { uniqueNamesGenerator, adjectives, colors, animals } from "unique-names-generator"
+
 export enum VersionIncrease {
   major = 'major',
   minor = 'minor',
@@ -57,4 +59,10 @@ export function nextVersion(current: Version, increase: VersionIncrease) : Versi
     nextVersion.major += 1
   }
   return nextVersion
+}
+
+export function versionName(used: string[]) : string {
+  const randomName = uniqueNamesGenerator({ dictionaries: [adjectives, colors, animals] });
+  if (used.includes(randomName)) return versionName(used)
+  else return randomName
 }
