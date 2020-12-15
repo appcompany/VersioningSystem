@@ -42,9 +42,9 @@ export class Comment {
   id: number
   content: string
 
-  constructor(input: { id: number, body: string }) {
-    this.id = input.id
-    this.content = input.body
+  constructor(input: ({ id: number; body?: string | undefined } | undefined)) {
+    this.id = input?.id ?? 0
+    this.content = input?.body ?? ''
   }
 
 }
@@ -59,14 +59,14 @@ export class Release {
   commitish: string
   asset: number | undefined
 
-  constructor(input: { id: number, body: string, name: string, target_commitish: string, tag_name: string, prerelease: boolean, assets: { id: number, name: string }[]}) {
-    this.id = input.id
-    this.asset = input.assets.find(asset => asset.name.toLowerCase().includes('release.json'))?.id
-    this.commitish = input.target_commitish
-    this.tag = input.tag_name
-    this.name = input.name
-    this.prerelease = input.prerelease
-    this.body = input.body
+  constructor(input: ({ id: number, body?: string | null | undefined, name: string | null, target_commitish: string, tag_name: string, prerelease: boolean, assets: { id: number, name: string }[]}) | undefined) {
+    this.id = input?.id ?? 0
+    this.asset = input?.assets.find(asset => asset.name.toLowerCase().includes('release.json'))?.id
+    this.commitish = input?.target_commitish ?? ''
+    this.tag = input?.tag_name ?? ''
+    this.name = input?.name ?? ''
+    this.prerelease = input?.prerelease ?? true
+    this.body = input?.body ?? ''
   }
 
 }
@@ -115,8 +115,8 @@ export class ReleaseContext {
   load = async (callback: () => void) => {
 
     const data = (await this.connection?.pulls.get({ ...github.context.repo, pull_number: this.pullNumber }))?.data
-    this.labels = data?.labels.map(label => label.name) ?? []
-    this.requestBody = data?.body
+    this.labels = (data?.labels ?? []).map(label => label?.name ?? '').filter(label => label != undefined)
+    this.requestBody = data?.body ?? ''
     this.status.didMerge = data?.merged
 
     this.commits = (await this.connection?.paginate(
@@ -134,15 +134,16 @@ export class ReleaseContext {
         this.releaseTarget = ReleaseTarget.invalid
     }
 
-    this.comments = (await this.connection?.paginate(
+    this.comments = ((await this.connection?.paginate(
       this.connection?.issues.listComments, { ...github.context.repo, issue_number: this.pullNumber }
-    ))?.map(comment => new Comment({ ...comment })) ?? []
+    )) ?? []).flatMap(comment => comment != undefined ? [new Comment(comment)] : [])
+
     this.status.changelogCommentID = this.comments.find(comment => comment.content.includes('<!-- version-bot-comment: changelog -->'))?.id
     this.status.previewCommentID = this.comments.find(comment => comment.content.includes('<!-- version-bot-comment: preview -->'))?.id
 
     this.releases = (await this.connection?.paginate(
       this.connection?.repos.listReleases, { ...github.context.repo }
-    ))?.map(release => new Release({ ...release })) ?? []
+    ))?.flatMap(release => release != undefined ? [new Release(release)] : []) ?? []
 
     callback()
 

@@ -11,10 +11,25 @@ try {
     throw Error('No token supplied, please provide a working access token.')
   }
 
-  context.load(() => {
+  context.load(() => { 
 
     if (context.options.changelog) {
-      // generate changelog
+      
+      var changelog = ''
+      for (const commit of context.commits) {
+        for (const change of commit.changes) {
+          changelog += `[${change.section.tags[0]}]-> ${change.message}\n`
+        }
+      }
+
+      const comment = `### Changelog Preview.\nplease make any needed changes and tick the checkbox below.\n${changelog}\n[ ] Changelog is correct (will auto release)\n<!-- version-bot-comment: changelog -->`
+      console.log(`generated comment:\n${comment}`)
+      if (context.status.changelogCommentID != undefined) {
+        context.connection?.issues.updateComment({ ...github.context.repo, comment_id: context.status.changelogCommentID, body: comment })
+      } else {
+        context.connection?.issues.createComment({ ...github.context.repo, issue_number: context.pullNumber, body: changelog })
+      }
+
     }
 
     if (context.options.labels) {
