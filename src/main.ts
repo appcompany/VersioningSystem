@@ -22,12 +22,12 @@ try {
         }
       }
 
-      const comment = `### Changelog Preview.\nplease make any needed changes and tick the checkbox below.\n${changelog}\n[ ] Changelog is correct (will auto release)\n<!-- version-bot-comment: changelog -->`
+      const comment = `### Changelog Preview.\n> please make any needed changes and tick the checkbox below.\n\`\`\`\n${changelog}\n\`\`\`\n[ ] Changelog is correct (will auto release)\n<!-- version-bot-comment: changelog -->`
       console.log(`generated comment:\n${comment}`)
       if (context.status.changelogCommentID != undefined) {
         context.connection?.issues.updateComment({ ...github.context.repo, comment_id: context.status.changelogCommentID, body: comment })
       } else {
-        context.connection?.issues.createComment({ ...github.context.repo, issue_number: context.pullNumber, body: changelog })
+        context.connection?.issues.createComment({ ...github.context.repo, issue_number: context.pullNumber, body: comment })
       }
 
     }

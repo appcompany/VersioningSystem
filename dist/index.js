@@ -28,8 +28,8 @@ class ChangelogSection {
 exports.ChangelogSection = ChangelogSection;
 // ordered list of changelog sections
 exports.sections = [
-    new ChangelogSection('New Features', 'bug', ['bug', 'bugfix', 'fix'], SectionType.release, versions_1.VersionIncrease.minor),
-    new ChangelogSection('Bug Fixes', 'feature', ['feature', 'feat', 'new-feat', 'new-feature'], SectionType.release, versions_1.VersionIncrease.patch),
+    new ChangelogSection('Bug Fixes', 'bug', ['bug', 'bugfix', 'fix'], SectionType.release, versions_1.VersionIncrease.minor),
+    new ChangelogSection('New Features', 'feature', ['feature', 'feat', 'new-feat', 'new-feature'], SectionType.release, versions_1.VersionIncrease.patch),
     new ChangelogSection('Changes', 'change', ['change', 'refactor', 'changes'], SectionType.release, versions_1.VersionIncrease.minor),
     new ChangelogSection('Languages', 'language', ['language', 'lang', 'new-lang', 'new-language'], SectionType.release, versions_1.VersionIncrease.minor),
     new ChangelogSection('Language Fixes', 'language-fix', ['language-fix', 'lang-fix', 'lang(fix)', 'langfix', 'fix-lang'], SectionType.release, versions_1.VersionIncrease.patch),
@@ -244,13 +244,13 @@ try {
                     changelog += `[${change.section.tags[0]}]-> ${change.message}\n`;
                 }
             }
-            const comment = `### Changelog Preview.\nplease make any needed changes and tick the checkbox below.\n${changelog}\n[ ] Changelog is correct (will auto release)\n<!-- version-bot-comment: changelog -->`;
+            const comment = `### Changelog Preview.\n> please make any needed changes and tick the checkbox below.\n\`\`\`\n${changelog}\n\`\`\`\n[ ] Changelog is correct (will auto release)\n<!-- version-bot-comment: changelog -->`;
             console.log(`generated comment:\n${comment}`);
             if (context.status.changelogCommentID != undefined) {
                 (_a = context.connection) === null || _a === void 0 ? void 0 : _a.issues.updateComment({ ...github.context.repo, comment_id: context.status.changelogCommentID, body: comment });
             }
             else {
-                (_b = context.connection) === null || _b === void 0 ? void 0 : _b.issues.createComment({ ...github.context.repo, issue_number: context.pullNumber, body: changelog });
+                (_b = context.connection) === null || _b === void 0 ? void 0 : _b.issues.createComment({ ...github.context.repo, issue_number: context.pullNumber, body: comment });
             }
         }
         if (context.options.labels) {

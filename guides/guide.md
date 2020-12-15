@@ -9,8 +9,8 @@ one change per line and always follow the following template:
 ```
 | Section Title  | Tags                                                 | Version Increase | Triggers Release |
 | -------------- | ---------------------------------------------------- | ---------------- | ---------------- |
-| New Features   | bug, bugfix, fix                                     | minor            | yes              |
-| Bug Fixes      | feature, feat, new-feat, new-feature                 | patch            | yes              |
+| Bug Fixes      | bug, bugfix, fix                                     | minor            | yes              |
+| New Features   | feature, feat, new-feat, new-feature                 | patch            | yes              |
 | Changes        | change, refactor, changes                            | minor            | yes              |
 | Languages      | language, lang, new-lang, new-language               | minor            | yes              |
 | Language Fixes | language-fix, lang-fix, lang(fix), langfix, fix-lang | patch            | yes              |
