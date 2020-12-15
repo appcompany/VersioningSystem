@@ -1,8 +1,9 @@
 import * as core from '@actions/core'
 import * as github from '@actions/github' 
 // import { analyze, extractList, generateComment } from './analyze'
-import { uniqueNamesGenerator, adjectives, colors, animals } from 'unique-names-generator'
-import { ReleaseContext } from './context'
+// import { uniqueNamesGenerator, adjectives, colors, animals } from 'unique-names-generator'
+import { sections, SectionType } from './changelog'
+import { Change, ReleaseContext } from './context'
 
 try {
   const context = new ReleaseContext()
@@ -22,8 +23,7 @@ try {
         }
       }
 
-      const comment = `### Changelog Preview.\n> please make any needed changes and tick the checkbox below.\n\`\`\`\n${changelog.trim()}\n\`\`\`\n-[ ] Changelog is correct (will auto release)\n<!-- version-bot-comment: changelog -->`
-      console.log(`generated comment:\n${comment}`)
+      const comment = `> please make any needed changes and wait for the preview to generate in a comment below.\n\`\`\`\n${changelog.trim()}\n\`\`\`\n<!-- version-bot-comment: changelog -->`
       if (context.status.changelogCommentID != undefined) {
         context.connection?.issues.updateComment({ ...github.context.repo, comment_id: context.status.changelogCommentID, body: comment })
       } else {
@@ -37,7 +37,44 @@ try {
     }
 
     if (context.options.preview) {
-      // generate changelog preview
+      
+      const changelogComment = context.comments.find(comment => comment.id == context.status.changelogCommentID)?.content ?? ''
+      const changes : Change[] = changelogComment.split('\n').flatMap(line => {
+        const regex = new RegExp(/\[(?<tag>.*?)\]\-\>/g)
+        const tag = regex.exec(line)?.groups?.tag ?? ''
+        const section = sections.find(section => section.tags.includes(tag))
+        const message = line.replace(regex, '').trim()
+        return section != undefined ? { section, message } : []
+      })
+      const sectionTags = changes.map(change => change.section.tags[0])
+      
+      var appstoreChangelog = ''
+      for (const section of sections.filter(section => section.type == SectionType.release)) {
+        if (sectionTags.includes(section.tags[0])) {
+          appstoreChangelog += `${section.displayName}\n`
+          for (const change of changes) {
+            appstoreChangelog += `- ${change.message}\n`
+          }
+        }
+      }
+
+      var internalChangelog = ''
+      for (const section of sections.filter(section => section.type == SectionType.internal)) {
+        if (sectionTags.includes(section.tags[0])) {
+          internalChangelog += `${section.displayName}\n`
+          for (const change of changes) {
+            internalChangelog += `- ${change.message}\n`
+          }
+        }
+      }
+
+      const comment = `#### Changelogs.\n###App Store Changelog\n${appstoreChangelog.trim()}\n##### Internal Changelog\n${internalChangelog.trim()}\n- [ ] Changelogs are correct. (will trigger a merge + release)`
+      if (context.status.previewCommentID != undefined) {
+        context.connection?.issues.updateComment({ ...github.context.repo, comment_id: context.status.previewCommentID, body: comment })
+      } else {
+        context.connection?.issues.createComment({ ...github.context.repo, issue_number: context.pullNumber, body: comment })
+      }
+
     }
 
     if (context.options.release) {
