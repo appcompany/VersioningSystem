@@ -75,6 +75,7 @@ export interface Change { message: string, section: ChangelogSection }
 export class Commit {
 
   sha: string | null
+  alreadyInBase = false
   changes: Change[]
 
   constructor(input: { sha: string | null, commit: { message: string }}) {
@@ -107,7 +108,6 @@ export class ReleaseContext {
   releases: Release[] = []
   comments: Comment[] = []
   commits: Commit[] = []
-  targetCommits: Commit[] = []
 
   releaseTarget: ReleaseTarget = ReleaseTarget.invalid
 
@@ -126,6 +126,10 @@ export class ReleaseContext {
       this.connection.pulls.listCommits, { ...github.context.repo, pull_number: this.pullNumber }
     ))?.map(commit => new Commit({ ...commit })) ?? []
 
+    for (const commit of this.commits) {
+      commit.alreadyInBase = ['behind','identical'].includes((await this.connection?.repos.compareCommits({ ...github.context.repo, base: data?.base.ref ?? '', head: commit.sha ?? '' }))?.data.status ?? '')
+    }
+
     switch (data?.base.ref) {
       case 'appstore':
         this.releaseTarget = ReleaseTarget.appstore
@@ -140,10 +144,6 @@ export class ReleaseContext {
     this.comments = ((await this.connection?.paginate(
       this.connection?.issues.listComments, { ...github.context.repo, issue_number: this.pullNumber }
     )) ?? []).flatMap(comment => comment != undefined ? [new Comment(comment)] : [])
-
-    this.targetCommits = (await this.connection?.paginate(
-      this.connection?.repos.listCommits, { ...github.context.repo, sha: data?.base.sha ?? undefined }
-    ))?.map(commit => new Commit({ ...commit })) ?? []
 
     this.status.changelogCommentID = this.comments.find(comment => comment.content.includes('<!-- version-bot-comment: changelog -->'))?.id
     this.status.previewCommentID = this.comments.find(comment => comment.content.includes('<!-- version-bot-comment: preview -->'))?.id
