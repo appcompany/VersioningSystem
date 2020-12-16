@@ -74,9 +74,11 @@ export class Release {
 export interface Change { message: string, section: ChangelogSection }
 export class Commit {
 
+  sha: string | null
   changes: Change[]
 
-  constructor(input: { commit: { message: string }}) {
+  constructor(input: { sha: string | null, commit: { message: string }}) {
+    this.sha = input.sha
     this.changes = input.commit.message.split('\n').flatMap(line => {
       const regex = new RegExp(/\[(?<tag>.*?)\]\-\>/g)
       const tag = regex.exec(line)?.groups?.tag ?? ''
@@ -105,6 +107,7 @@ export class ReleaseContext {
   releases: Release[] = []
   comments: Comment[] = []
   commits: Commit[] = []
+  targetCommits: Commit[] = []
 
   releaseTarget: ReleaseTarget = ReleaseTarget.invalid
 
@@ -137,6 +140,10 @@ export class ReleaseContext {
     this.comments = ((await this.connection?.paginate(
       this.connection?.issues.listComments, { ...github.context.repo, issue_number: this.pullNumber }
     )) ?? []).flatMap(comment => comment != undefined ? [new Comment(comment)] : [])
+
+    this.targetCommits = (await this.connection?.paginate(
+      this.connection?.repos.listCommits, { ...github.context.repo, sha: data?.base.sha ?? undefined }
+    ))?.map(commit => new Commit({ ...commit })) ?? []
 
     this.status.changelogCommentID = this.comments.find(comment => comment.content.includes('<!-- version-bot-comment: changelog -->'))?.id
     this.status.previewCommentID = this.comments.find(comment => comment.content.includes('<!-- version-bot-comment: preview -->'))?.id

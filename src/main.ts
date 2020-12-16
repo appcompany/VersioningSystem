@@ -17,7 +17,8 @@ try {
     if (context.options.changelog) {
       
       var changelog = ''
-      for (const commit of context.commits) {
+      const commitSHAs = context.targetCommits.map(commit => commit.sha)
+      for (const commit of context.commits.filter(commit => !commitSHAs.includes(commit.sha))) {
         for (const change of commit.changes) {
           changelog += `[${change.section.tags[0]}]-> ${change.message}\n`
         }

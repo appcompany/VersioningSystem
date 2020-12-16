@@ -133,6 +133,7 @@ class Release {
 exports.Release = Release;
 class Commit {
     constructor(input) {
+        this.sha = input.sha;
         this.changes = input.commit.message.split('\n').flatMap(line => {
             var _a, _b, _c;
             const regex = new RegExp(/\[(?<tag>.*?)\]\-\>/g);
@@ -161,9 +162,10 @@ class ReleaseContext {
         this.releases = [];
         this.comments = [];
         this.commits = [];
+        this.targetCommits = [];
         this.releaseTarget = ReleaseTarget.invalid;
         this.load = async (callback) => {
-            var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p, _q, _r;
+            var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p, _q, _r, _s, _t, _u, _v, _w;
             const data = (_b = (await ((_a = this.connection) === null || _a === void 0 ? void 0 : _a.pulls.get({ ...github.context.repo, pull_number: this.pullNumber })))) === null || _b === void 0 ? void 0 : _b.data;
             this.labels = ((_c = data === null || data === void 0 ? void 0 : data.labels) !== null && _c !== void 0 ? _c : []).map(label => { var _a; return (_a = label === null || label === void 0 ? void 0 : label.name) !== null && _a !== void 0 ? _a : ''; }).filter(label => label != undefined);
             this.requestBody = (_d = data === null || data === void 0 ? void 0 : data.body) !== null && _d !== void 0 ? _d : '';
@@ -180,9 +182,10 @@ class ReleaseContext {
                     this.releaseTarget = ReleaseTarget.invalid;
             }
             this.comments = ((_k = (await ((_h = this.connection) === null || _h === void 0 ? void 0 : _h.paginate((_j = this.connection) === null || _j === void 0 ? void 0 : _j.issues.listComments, { ...github.context.repo, issue_number: this.pullNumber })))) !== null && _k !== void 0 ? _k : []).flatMap(comment => comment != undefined ? [new Comment(comment)] : []);
-            this.status.changelogCommentID = (_l = this.comments.find(comment => comment.content.includes('<!-- version-bot-comment: changelog -->'))) === null || _l === void 0 ? void 0 : _l.id;
-            this.status.previewCommentID = (_m = this.comments.find(comment => comment.content.includes('<!-- version-bot-comment: preview -->'))) === null || _m === void 0 ? void 0 : _m.id;
-            this.releases = (_r = (_q = (await ((_o = this.connection) === null || _o === void 0 ? void 0 : _o.paginate((_p = this.connection) === null || _p === void 0 ? void 0 : _p.repos.listReleases, { ...github.context.repo })))) === null || _q === void 0 ? void 0 : _q.flatMap(release => release != undefined ? [new Release(release)] : [])) !== null && _r !== void 0 ? _r : [];
+            this.targetCommits = (_q = (_p = (await ((_l = this.connection) === null || _l === void 0 ? void 0 : _l.paginate((_m = this.connection) === null || _m === void 0 ? void 0 : _m.repos.listCommits, { ...github.context.repo, sha: (_o = data === null || data === void 0 ? void 0 : data.base.sha) !== null && _o !== void 0 ? _o : undefined })))) === null || _p === void 0 ? void 0 : _p.map(commit => new Commit({ ...commit }))) !== null && _q !== void 0 ? _q : [];
+            this.status.changelogCommentID = (_r = this.comments.find(comment => comment.content.includes('<!-- version-bot-comment: changelog -->'))) === null || _r === void 0 ? void 0 : _r.id;
+            this.status.previewCommentID = (_s = this.comments.find(comment => comment.content.includes('<!-- version-bot-comment: preview -->'))) === null || _s === void 0 ? void 0 : _s.id;
+            this.releases = (_w = (_v = (await ((_t = this.connection) === null || _t === void 0 ? void 0 : _t.paginate((_u = this.connection) === null || _u === void 0 ? void 0 : _u.repos.listReleases, { ...github.context.repo })))) === null || _v === void 0 ? void 0 : _v.flatMap(release => release != undefined ? [new Release(release)] : [])) !== null && _w !== void 0 ? _w : [];
             callback();
         };
         if (github.context.payload.pull_request == null && process.env.TESTING !== 'true') {
@@ -242,7 +245,8 @@ try {
         var _a, _b, _c, _d, _e, _f;
         if (context.options.changelog) {
             var changelog = '';
-            for (const commit of context.commits) {
+            const commitSHAs = context.targetCommits.map(commit => commit.sha);
+            for (const commit of context.commits.filter(commit => !commitSHAs.includes(commit.sha))) {
                 for (const change of commit.changes) {
                     changelog += `[${change.section.tags[0]}]-> ${change.message}\n`;
                 }
