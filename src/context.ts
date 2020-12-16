@@ -13,7 +13,6 @@ const footerPath = resolve(`${process.cwd()}/.versioning/update_footer`)
 export class ReleaseStatus {
 
   changelogCommentID: number | undefined
-  previewCommentID: number | undefined
   shouldRelease = false
   didMerge: boolean | undefined
 
@@ -146,7 +145,6 @@ export class ReleaseContext {
     )) ?? []).flatMap(comment => comment != undefined ? [new Comment(comment)] : [])
 
     this.status.changelogCommentID = this.comments.find(comment => comment.content.includes('<!-- version-bot-comment: changelog -->'))?.id
-    this.status.previewCommentID = this.comments.find(comment => comment.content.includes('<!-- version-bot-comment: preview -->'))?.id
 
     this.releases = (await this.connection?.paginate(
       this.connection?.repos.listReleases, { ...github.context.repo }

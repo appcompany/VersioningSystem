@@ -165,7 +165,7 @@ class ReleaseContext {
         this.commits = [];
         this.releaseTarget = ReleaseTarget.invalid;
         this.load = async (callback) => {
-            var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p, _q, _r, _s, _t, _u, _v, _w;
+            var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p, _q, _r, _s, _t, _u, _v;
             const data = (_b = (await ((_a = this.connection) === null || _a === void 0 ? void 0 : _a.pulls.get({ ...github.context.repo, pull_number: this.pullNumber })))) === null || _b === void 0 ? void 0 : _b.data;
             this.labels = ((_c = data === null || data === void 0 ? void 0 : data.labels) !== null && _c !== void 0 ? _c : []).map(label => { var _a; return (_a = label === null || label === void 0 ? void 0 : label.name) !== null && _a !== void 0 ? _a : ''; }).filter(label => label != undefined);
             this.requestBody = (_d = data === null || data === void 0 ? void 0 : data.body) !== null && _d !== void 0 ? _d : '';
@@ -186,8 +186,7 @@ class ReleaseContext {
             }
             this.comments = ((_q = (await ((_o = this.connection) === null || _o === void 0 ? void 0 : _o.paginate((_p = this.connection) === null || _p === void 0 ? void 0 : _p.issues.listComments, { ...github.context.repo, issue_number: this.pullNumber })))) !== null && _q !== void 0 ? _q : []).flatMap(comment => comment != undefined ? [new Comment(comment)] : []);
             this.status.changelogCommentID = (_r = this.comments.find(comment => comment.content.includes('<!-- version-bot-comment: changelog -->'))) === null || _r === void 0 ? void 0 : _r.id;
-            this.status.previewCommentID = (_s = this.comments.find(comment => comment.content.includes('<!-- version-bot-comment: preview -->'))) === null || _s === void 0 ? void 0 : _s.id;
-            this.releases = (_w = (_v = (await ((_t = this.connection) === null || _t === void 0 ? void 0 : _t.paginate((_u = this.connection) === null || _u === void 0 ? void 0 : _u.repos.listReleases, { ...github.context.repo })))) === null || _v === void 0 ? void 0 : _v.flatMap(release => release != undefined ? [new Release(release)] : [])) !== null && _w !== void 0 ? _w : [];
+            this.releases = (_v = (_u = (await ((_s = this.connection) === null || _s === void 0 ? void 0 : _s.paginate((_t = this.connection) === null || _t === void 0 ? void 0 : _t.repos.listReleases, { ...github.context.repo })))) === null || _u === void 0 ? void 0 : _u.flatMap(release => release != undefined ? [new Release(release)] : [])) !== null && _v !== void 0 ? _v : [];
             callback();
         };
         if (github.context.payload.pull_request == null && process.env.TESTING !== 'true') {
@@ -244,27 +243,26 @@ try {
         throw Error('No token supplied, please provide a working access token.');
     }
     context.load(() => {
-        var _a, _b, _c, _d;
+        var _a, _b;
         if (context.options.changelog) {
-            var changelog = '';
-            for (const commit of context.commits.filter(commit => !commit.alreadyInBase)) {
-                for (const change of commit.changes) {
-                    changelog += `[${change.section.tags[0]}]-> ${change.message}\n`;
-                }
-            }
-            const comment = `> please make any needed changes and wait for the preview to generate in a comment below.\n\`\`\`\n${changelog.trim()}\n\`\`\`\n<!-- version-bot-comment: changelog -->`;
-            if (context.status.changelogCommentID != undefined) {
-                (_a = context.connection) === null || _a === void 0 ? void 0 : _a.issues.updateComment({ ...github.context.repo, comment_id: context.status.changelogCommentID, body: comment });
-            }
-            else {
-                (_b = context.connection) === null || _b === void 0 ? void 0 : _b.issues.createComment({ ...github.context.repo, issue_number: context.pullNumber, body: comment });
-            }
+            // var changelog = ''
+            // for (const commit of context.commits.filter(commit => !commit.alreadyInBase)) {
+            //   for (const change of commit.changes) {
+            //     changelog += `[${change.section.tags[0]}]-> ${change.message}\n`
+            //   }
+            // }
+            // const comment = `> please make any needed changes and wait for the preview to generate in a comment below.\n\`\`\`\n${changelog.trim()}\n\`\`\`\n<!-- version-bot-comment: changelog -->`
+            // if (context.status.changelogCommentID != undefined) {
+            //   context.connection?.issues.updateComment({ ...github.context.repo, comment_id: context.status.changelogCommentID, body: comment })
+            // } else {
+            //   context.connection?.issues.createComment({ ...github.context.repo, issue_number: context.pullNumber, body: comment })
+            // }
         }
         if (context.options.labels) {
             // set labels
         }
-        if (context.options.preview) {
-            const changelogComment = (() => {
+        if (context.options.preview || context.options.changelog) {
+            const changelog = (() => {
                 var _a, _b;
                 if (context.options.changelog) {
                     var changelog = '';
@@ -273,13 +271,23 @@ try {
                             changelog += `[${change.section.tags[0]}]-> ${change.message}\n`;
                         }
                     }
-                    return `> please make any needed changes and wait for the preview to generate in a comment below.\n\`\`\`\n${changelog.trim()}\n\`\`\`\n<!-- version-bot-comment: changelog -->`;
+                    return changelog;
                 }
                 else {
-                    return (_b = (_a = context.comments.find(comment => comment.id == context.status.changelogCommentID)) === null || _a === void 0 ? void 0 : _a.content) !== null && _b !== void 0 ? _b : '';
+                    var open = false;
+                    var changelog = '';
+                    for (const line of ((_b = (_a = context.comments.find(comment => comment.id == context.status.changelogCommentID)) === null || _a === void 0 ? void 0 : _a.content) !== null && _b !== void 0 ? _b : '').split('\n')) {
+                        if (line.includes('<!-- begin-changelog-list -->'))
+                            open = true;
+                        else if (open && line.includes('<!-- end-changelog-list -->'))
+                            open = false;
+                        else if (open)
+                            changelog += line;
+                    }
+                    return changelog;
                 }
             })();
-            const changes = changelogComment.split('\n').flatMap(line => {
+            const changes = changelog.split('\n').flatMap(line => {
                 var _a, _b, _c;
                 const regex = new RegExp(/\[(?<tag>.*?)\]\-\>/g);
                 const tag = (_c = (_b = (_a = regex.exec(line)) === null || _a === void 0 ? void 0 : _a.groups) === null || _b === void 0 ? void 0 : _b.tag) !== null && _c !== void 0 ? _c : '';
@@ -291,8 +299,8 @@ try {
             var appstoreChangelog = '';
             for (const section of changelog_1.sections.filter(section => section.type == changelog_1.SectionType.release)) {
                 if (sectionTags.includes(section.tags[0])) {
-                    appstoreChangelog += `${section.displayName}\n`;
-                    for (const change of changes) {
+                    appstoreChangelog += `${section.displayName}:\n`;
+                    for (const change of changes.filter(change => change.section.tags[0] == section.tags[0])) {
                         appstoreChangelog += `- ${change.message}\n`;
                     }
                 }
@@ -300,18 +308,35 @@ try {
             var internalChangelog = '';
             for (const section of changelog_1.sections.filter(section => section.type == changelog_1.SectionType.internal)) {
                 if (sectionTags.includes(section.tags[0])) {
-                    internalChangelog += `${section.displayName}\n`;
-                    for (const change of changes) {
+                    internalChangelog += `${section.displayName}:\n`;
+                    for (const change of changes.filter(change => change.section.tags[0] == section.tags[0])) {
                         internalChangelog += `- ${change.message}\n`;
                     }
                 }
             }
-            const comment = `#### Changelogs.\n###App Store Changelog\n${appstoreChangelog.trim()}\n##### Internal Changelog\n${internalChangelog.trim()}\n- [ ] Changelogs are correct. (will trigger a merge + release)`;
-            if (context.status.previewCommentID != undefined) {
-                (_c = context.connection) === null || _c === void 0 ? void 0 : _c.issues.updateComment({ ...github.context.repo, comment_id: context.status.previewCommentID, body: comment });
+            const comment = `
+        # Changelogs.
+        > please make any needed changes and wait for the preview to generate in a comment below.
+        <!-- begin-changelog-list -->
+        \`\`\`
+        ${changelog.trim()}
+        \`\`\`
+        <!-- end-changelog-list -->
+        ### App Store Preview
+        \`\`\`
+        ${appstoreChangelog.trim()}
+        \`\`\`
+        ##### Internal Preview
+        \`\`\`
+        ${internalChangelog.trim()}
+        \`\`\`
+        - [ ] Changelogs are correct. (will trigger a merge + release)
+      `.split('\n').map(line => line.trim()).join('\n');
+            if (context.status.changelogCommentID != undefined) {
+                (_a = context.connection) === null || _a === void 0 ? void 0 : _a.issues.updateComment({ ...github.context.repo, comment_id: context.status.changelogCommentID, body: comment });
             }
             else {
-                (_d = context.connection) === null || _d === void 0 ? void 0 : _d.issues.createComment({ ...github.context.repo, issue_number: context.pullNumber, body: comment });
+                (_b = context.connection) === null || _b === void 0 ? void 0 : _b.issues.createComment({ ...github.context.repo, issue_number: context.pullNumber, body: comment });
             }
         }
         if (context.options.release) {
