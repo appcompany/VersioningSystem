@@ -172,8 +172,7 @@ class ReleaseContext {
             this.status.didMerge = data === null || data === void 0 ? void 0 : data.merged;
             this.commits = (_g = (_f = (await ((_e = this.connection) === null || _e === void 0 ? void 0 : _e.paginate(this.connection.pulls.listCommits, { ...github.context.repo, pull_number: this.pullNumber })))) === null || _f === void 0 ? void 0 : _f.map(commit => new Commit({ ...commit }))) !== null && _g !== void 0 ? _g : [];
             for (const commit of this.commits) {
-                const status = (_l = (await ((_h = this.connection) === null || _h === void 0 ? void 0 : _h.repos.compareCommits({ ...github.context.repo, base: (_j = data === null || data === void 0 ? void 0 : data.base.ref) !== null && _j !== void 0 ? _j : '', head: (_k = commit.sha) !== null && _k !== void 0 ? _k : '' })))) === null || _l === void 0 ? void 0 : _l.data.status;
-                console.log(`${commit.sha} > ${status}`);
+                commit.alreadyInBase = ((_l = (await ((_h = this.connection) === null || _h === void 0 ? void 0 : _h.repos.compareCommits({ ...github.context.repo, base: (_j = data === null || data === void 0 ? void 0 : data.base.ref) !== null && _j !== void 0 ? _j : '', head: (_k = commit.sha) !== null && _k !== void 0 ? _k : '' })))) === null || _l === void 0 ? void 0 : _l.data.status) != 'ahead';
             }
             switch (data === null || data === void 0 ? void 0 : data.base.ref) {
                 case 'appstore':
