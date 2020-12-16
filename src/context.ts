@@ -128,6 +128,7 @@ export class ReleaseContext {
 
     for (const commit of this.commits) {
       commit.alreadyInBase = ['behind','identical'].includes((await this.connection?.repos.compareCommits({ ...github.context.repo, base: data?.base.ref ?? '', head: commit.sha ?? '' }))?.data.status ?? '')
+      console.log(`${commit.sha} > ${commit.alreadyInBase}`)
     }
 
     switch (data?.base.ref) {
