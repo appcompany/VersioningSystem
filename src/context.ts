@@ -127,7 +127,7 @@ export class ReleaseContext {
     ))?.map(commit => new Commit({ ...commit })) ?? []
 
     for (const commit of this.commits) {
-      commit.alreadyInBase = (await this.connection?.repos.compareCommits({ ...github.context.repo, base: data?.base.ref ?? '', head: commit.sha ?? '' }))?.data.status != 'ahead'
+      commit.alreadyInBase = ['identical','behind'].includes((await this.connection?.repos.compareCommits({ ...github.context.repo, base: data?.base.ref ?? '', head: commit.sha ?? '' }))?.data.status ?? '')
     }
 
     switch (data?.base.ref) {
