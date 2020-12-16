@@ -38,7 +38,19 @@ try {
 
     if (context.options.preview) {
       
-      const changelogComment = context.comments.find(comment => comment.id == context.status.changelogCommentID)?.content ?? ''
+      const changelogComment = (() => {
+        if (context.options.changelog) {
+          var changelog = ''
+          for (const commit of context.commits.filter(commit => !commit.alreadyInBase)) {
+            for (const change of commit.changes) {
+              changelog += `[${change.section.tags[0]}]-> ${change.message}\n`
+            }
+          }
+          return `> please make any needed changes and wait for the preview to generate in a comment below.\n\`\`\`\n${changelog.trim()}\n\`\`\`\n<!-- version-bot-comment: changelog -->`
+        } else {
+          return context.comments.find(comment => comment.id == context.status.changelogCommentID)?.content ?? ''
+        }
+      })() 
       const changes : Change[] = changelogComment.split('\n').flatMap(line => {
         const regex = new RegExp(/\[(?<tag>.*?)\]\-\>/g)
         const tag = regex.exec(line)?.groups?.tag ?? ''

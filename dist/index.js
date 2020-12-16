@@ -244,7 +244,7 @@ try {
         throw Error('No token supplied, please provide a working access token.');
     }
     context.load(() => {
-        var _a, _b, _c, _d, _e, _f;
+        var _a, _b, _c, _d;
         if (context.options.changelog) {
             var changelog = '';
             for (const commit of context.commits.filter(commit => !commit.alreadyInBase)) {
@@ -264,7 +264,21 @@ try {
             // set labels
         }
         if (context.options.preview) {
-            const changelogComment = (_d = (_c = context.comments.find(comment => comment.id == context.status.changelogCommentID)) === null || _c === void 0 ? void 0 : _c.content) !== null && _d !== void 0 ? _d : '';
+            const changelogComment = (() => {
+                var _a, _b;
+                if (context.options.changelog) {
+                    var changelog = '';
+                    for (const commit of context.commits.filter(commit => !commit.alreadyInBase)) {
+                        for (const change of commit.changes) {
+                            changelog += `[${change.section.tags[0]}]-> ${change.message}\n`;
+                        }
+                    }
+                    return `> please make any needed changes and wait for the preview to generate in a comment below.\n\`\`\`\n${changelog.trim()}\n\`\`\`\n<!-- version-bot-comment: changelog -->`;
+                }
+                else {
+                    return (_b = (_a = context.comments.find(comment => comment.id == context.status.changelogCommentID)) === null || _a === void 0 ? void 0 : _a.content) !== null && _b !== void 0 ? _b : '';
+                }
+            })();
             const changes = changelogComment.split('\n').flatMap(line => {
                 var _a, _b, _c;
                 const regex = new RegExp(/\[(?<tag>.*?)\]\-\>/g);
@@ -294,10 +308,10 @@ try {
             }
             const comment = `#### Changelogs.\n###App Store Changelog\n${appstoreChangelog.trim()}\n##### Internal Changelog\n${internalChangelog.trim()}\n- [ ] Changelogs are correct. (will trigger a merge + release)`;
             if (context.status.previewCommentID != undefined) {
-                (_e = context.connection) === null || _e === void 0 ? void 0 : _e.issues.updateComment({ ...github.context.repo, comment_id: context.status.previewCommentID, body: comment });
+                (_c = context.connection) === null || _c === void 0 ? void 0 : _c.issues.updateComment({ ...github.context.repo, comment_id: context.status.previewCommentID, body: comment });
             }
             else {
-                (_f = context.connection) === null || _f === void 0 ? void 0 : _f.issues.createComment({ ...github.context.repo, issue_number: context.pullNumber, body: comment });
+                (_d = context.connection) === null || _d === void 0 ? void 0 : _d.issues.createComment({ ...github.context.repo, issue_number: context.pullNumber, body: comment });
             }
         }
         if (context.options.release) {
