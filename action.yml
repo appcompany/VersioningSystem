@@ -24,7 +24,7 @@ inputs:
   preview:
     description: 'generate preview for changelog'
     required: false
-    default: false
+    default: 'false'
   changelog:
     description: 'generate changelog'
     required: false
