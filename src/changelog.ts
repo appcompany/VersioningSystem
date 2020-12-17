@@ -103,9 +103,9 @@ export const changelog = (context: ReleaseContext) => {
     <!-- end-changelog-list -->
     ### App Store Preview
     \`\`\`
-    ${context.updateMessage}
+    ${context.updateMessage}\n
     ${appstoreChangelog.length == 0 ? 'No releaseable changes.' : appstoreChangelog.trim()}
-    ${context.updateFooter}
+    \n${context.updateFooter}
     \`\`\`
     ##### Internal Preview
     \`\`\`

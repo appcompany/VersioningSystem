@@ -6,9 +6,9 @@ import * as core from '@actions/core'
 import * as github from '@actions/github'
 import { ChangelogSection, sections } from './changelog'
 
-const majorPath = resolve(`${process.cwd()}/.versioning/major_version`)
-const messagePath = resolve(`${process.cwd()}/.versioning/update_message`)
-const footerPath = resolve(`${process.cwd()}/.versioning/update_footer`)
+const majorPath = resolve(`${process.env.GITHUB_WORKSPACE ?? process.cwd()}/.versioning/major_version`)
+const messagePath = resolve(`${process.env.GITHUB_WORKSPACE ?? process.cwd()}/.versioning/update_message`)
+const footerPath = resolve(`${process.env.GITHUB_WORKSPACE ?? process.cwd()}/.versioning/update_footer`)
 
 export class ReleaseStatus {
 
