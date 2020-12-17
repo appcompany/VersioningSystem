@@ -81,7 +81,7 @@ const changelog = (context) => {
                 else if (open && line.includes('<!-- end-changelog-list -->'))
                     open = false;
                 else if (open)
-                    changelog += line.replace(/[`]/g, '').trim();
+                    changelog += `${line.replace(/[\`]/g, '').trim()}\n`;
             }
             return changelog;
         }

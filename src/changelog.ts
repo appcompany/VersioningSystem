@@ -29,16 +29,16 @@ export class ChangelogSection {
 
 // ordered list of changelog sections
 export const sections : ChangelogSection[] = [
-  new ChangelogSection('Bug Fixes', 'bug', ['bug','bugfix','fix'], SectionType.release, VersionIncrease.minor),
-  new ChangelogSection('New Features', 'feature', ['feature','feat','new-feat','new-feature'], SectionType.release, VersionIncrease.patch),
-  new ChangelogSection('Changes', 'change', ['change','refactor','changes'], SectionType.release, VersionIncrease.minor),
-  new ChangelogSection('Languages', 'language', ['language','lang','new-lang','new-language'], SectionType.release, VersionIncrease.minor),
-  new ChangelogSection('Language Fixes', 'language-fix', ['language-fix','lang-fix','lang(fix)','langfix','fix-lang'], SectionType.release, VersionIncrease.patch),
-  new ChangelogSection('Metadata', 'metadata', ['metadata','meta'], SectionType.release, VersionIncrease.patch, true),
-  new ChangelogSection('Documentation', 'documentation', ['documentation','docs','doc'], SectionType.internal),
-  new ChangelogSection('Build System', 'ci', ['ci','build-system','build'], SectionType.internal),
-  new ChangelogSection('Tests', 'tests', ['tests','test','testing'], SectionType.internal),
-  new ChangelogSection('Miscellaneous', 'misc', ['misc','chore'], SectionType.internal)
+  new ChangelogSection('Bug Fixes',       'bug',            ['bug','bugfix','fix'],                                         SectionType.release, VersionIncrease.minor),
+  new ChangelogSection('New Features',    'feature',        ['feature','feat','new-feat','new-feature'],                    SectionType.release, VersionIncrease.patch),
+  new ChangelogSection('Changes',         'change',         ['change','refactor','changes'],                                SectionType.release, VersionIncrease.minor),
+  new ChangelogSection('Languages',       'language',       ['language','lang','new-lang','new-language'],                  SectionType.release, VersionIncrease.minor),
+  new ChangelogSection('Language Fixes',  'language-fix',   ['language-fix','lang-fix','lang(fix)','langfix','fix-lang'],   SectionType.release, VersionIncrease.patch),
+  new ChangelogSection('Metadata',        'metadata',       ['metadata','meta'],                                            SectionType.release, VersionIncrease.patch, true),
+  new ChangelogSection('Documentation',   'documentation',  ['documentation','docs','doc'],                                 SectionType.internal),
+  new ChangelogSection('Build System',    'ci',             ['ci','build-system','build'],                                  SectionType.internal),
+  new ChangelogSection('Tests',           'tests',          ['tests','test','testing'],                                     SectionType.internal),
+  new ChangelogSection('Miscellaneous',   'misc',           ['misc','chore'],                                               SectionType.internal)
 ]
 
 export const changelog = (context: ReleaseContext) => {
@@ -58,7 +58,7 @@ export const changelog = (context: ReleaseContext) => {
       for (const line of (context.comments.find(comment => comment.id == context.status.changelogCommentID)?.content ?? '').split('\n')) {
         if (line.includes('<!-- begin-changelog-list -->')) open = true
         else if (open && line.includes('<!-- end-changelog-list -->')) open = false
-        else if (open) changelog += line.replace(/[`]/g,'').trim()
+        else if (open) changelog += `${line.replace(/[\`]/g,'').trim()}\n`
       }
       return changelog
     }
