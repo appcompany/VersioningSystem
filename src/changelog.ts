@@ -58,7 +58,7 @@ export const changelog = (context: ReleaseContext) => {
       for (const line of (context.comments.find(comment => comment.id == context.status.changelogCommentID)?.content ?? '').split('\n')) {
         if (line.includes('<!-- begin-changelog-list -->')) open = true
         else if (open && line.includes('<!-- end-changelog-list -->')) open = false
-        else if (open && line.trim() !== '\`\`\`') changelog += line.trim()
+        else if (open) changelog += line.replace(/[`]/g,'').trim()
       }
       return changelog
     }
