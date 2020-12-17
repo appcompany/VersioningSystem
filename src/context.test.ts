@@ -10,7 +10,7 @@ describe('Context', () => {
     expect(context.updateFooter).to.equal('This is a message that is displayed')
   })
   it('should have proper commit reading', () => {
-    const commit = new Commit({ commit: { message: `
+    const commit = new Commit({ sha: '', commit: { message: `
       [test]-> this is a test
       [feature]-> something new
       [lang(fix)]-> minor fix

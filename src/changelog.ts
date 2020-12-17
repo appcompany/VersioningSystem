@@ -1,4 +1,6 @@
+import { Change, ReleaseContext } from './context'
 import { VersionIncrease } from './versions'
+import * as github from '@actions/github'
 
 export enum SectionType {
   release = 'release',
@@ -39,20 +41,80 @@ export const sections : ChangelogSection[] = [
   new ChangelogSection('Miscellaneous', 'misc', ['misc','chore'], SectionType.internal)
 ]
 
-// const lowercase = (input: string) => input.charAt(0).toLowerCase() + input.slice(1)
+export const changelog = (context: ReleaseContext) => {
 
-// export function changelogPreview(changes: AnalyzeChange[], type: SectionType) {
-//   var text : string[] = []
-//   for (const section of sections.filter(section => section.type == type)) {
-//     if (section.hide) continue
-//     var foundOne = false
-//     for (const change of changes) {
-//       if (change.section == section) {
-//         if (!foundOne) { text.push(`${section.displayName}`); foundOne = true }
-//         text.push(`- ${lowercase(change.content)}`)
-//       }
-//     }
-//     if (foundOne) text.push('')
-//   }
-//   return text.join('\n')
-// }
+  const changelog = (() => {
+    if (context.options.changelog) {
+      var changelog = ''
+      for (const commit of context.commits.filter(commit => !commit.alreadyInBase)) {
+        for (const change of commit.changes) {
+          changelog += `[${change.section.tags[0]}]-> ${change.message}\n`
+        }
+      }
+      return changelog
+    } else {
+      var open = false
+      var changelog = ''
+      for (const line of (context.comments.find(comment => comment.id == context.status.changelogCommentID)?.content ?? '').split('\n')) {
+        if (line.includes('<!-- begin-changelog-list -->')) open = true
+        else if (open && line.includes('<!-- end-changelog-list -->')) open = false
+        else if (open) changelog += line
+      }
+      return changelog
+    }
+  })()
+
+  const changes : Change[] = changelog.split('\n').flatMap(line => {
+    const regex = new RegExp(/\[(?<tag>.*?)\]\-\>/g)
+    const tag = regex.exec(line)?.groups?.tag ?? ''
+    const section = sections.find(section => section.tags.includes(tag))
+    const message = line.replace(regex, '').trim()
+    return section != undefined ? { section, message } : []
+  })
+  const sectionTags = changes.map(change => change.section.tags[0])
+  
+  var appstoreChangelog = ''
+  for (const section of sections.filter(section => section.type == SectionType.release)) {
+    if (sectionTags.includes(section.tags[0])) {
+      appstoreChangelog += `${section.displayName}:\n`
+      for (const change of changes.filter(change => change.section.tags[0] == section.tags[0])) {
+        appstoreChangelog += `- ${change.message}\n`
+      }
+    }
+  }
+
+  var internalChangelog = ''
+  for (const section of sections.filter(section => section.type == SectionType.internal)) {
+    if (sectionTags.includes(section.tags[0])) {
+      internalChangelog += `${section.displayName}:\n`
+      for (const change of changes.filter(change => change.section.tags[0] == section.tags[0])) {
+        internalChangelog += `- ${change.message}\n`
+      }
+    }
+  }
+
+  const comment = `
+    # Changelogs.
+    > please make any needed changes and wait for the preview to generate in a comment below.
+    <!-- begin-changelog-list -->
+    \`\`\`
+    ${changelog.trim()}
+    \`\`\`
+    <!-- end-changelog-list -->
+    ### App Store Preview
+    \`\`\`
+    ${appstoreChangelog.trim()}
+    \`\`\`
+    ##### Internal Preview
+    \`\`\`
+    ${internalChangelog.trim()}
+    \`\`\`
+    - [ ] Changelogs are correct. (will trigger a merge + release)
+  `.split('\n').map(line => line.trim()).join('\n')
+  if (context.status.changelogCommentID != undefined) {
+    context.connection?.issues.updateComment({ ...github.context.repo, comment_id: context.status.changelogCommentID, body: comment })
+  } else {
+    context.connection?.issues.createComment({ ...github.context.repo, issue_number: context.pullNumber, body: comment })
+  }
+
+}

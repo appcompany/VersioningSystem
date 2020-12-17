@@ -9,6 +9,10 @@ inputs:
     description: 'Github Token to allow the bot to comment on pull requests'
     required: false
     default: ${{ github.token }}
+  pullRequest:
+    description: 'pull request number'
+    required: false
+    default: ${{ github.event.pull_request.number }}
   release:
     description: 'test'
     required: false
@@ -21,9 +25,3 @@ inputs:
     description: 'generate changelog'
     required: false
     default: 'false'
-  preview:
-    description: 'generate changelog preview'
-    required: false
-    default: 'false'
-  
-  

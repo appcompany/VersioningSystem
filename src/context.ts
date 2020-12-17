@@ -101,7 +101,7 @@ export class ReleaseContext {
   status = new ReleaseStatus()
   requestBody : string | undefined
 
-  pullNumber: number = github.context.payload.pull_request?.number ?? 0
+  pullNumber : number = Number(core.getInput('pullRequest') ?? '0')
 
   labels: string[] = []
   releases: Release[] = []
