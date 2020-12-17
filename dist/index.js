@@ -123,9 +123,9 @@ const changelog = (context) => {
     <!-- end-changelog-list -->
     ### App Store Preview
     \`\`\`
-    ${context.updateMessage}
+    ${context.updateMessage}\n
     ${appstoreChangelog.length == 0 ? 'No releaseable changes.' : appstoreChangelog.trim()}
-    ${context.updateFooter}
+    \n${context.updateFooter}
     \`\`\`
     ##### Internal Preview
     \`\`\`
@@ -170,6 +170,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
     __setModuleDefault(result, mod);
     return result;
 };
+var _a, _b, _c;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ReleaseContext = exports.ReleaseTarget = exports.Commit = exports.Release = exports.Comment = exports.SystemOptions = exports.ReleaseStatus = void 0;
 const path_1 = __webpack_require__(622);
@@ -178,9 +179,9 @@ const github_1 = __webpack_require__(438);
 const core = __importStar(__webpack_require__(186));
 const github = __importStar(__webpack_require__(438));
 const changelog_1 = __webpack_require__(82);
-const majorPath = __webpack_require__.ab + "major_version";
-const messagePath = __webpack_require__.ab + "update_message";
-const footerPath = __webpack_require__.ab + "update_footer";
+const majorPath = path_1.resolve(`${(_a = process.env.GITHUB_WORKSPACE) !== null && _a !== void 0 ? _a : process.cwd()}/.versioning/major_version`);
+const messagePath = path_1.resolve(`${(_b = process.env.GITHUB_WORKSPACE) !== null && _b !== void 0 ? _b : process.cwd()}/.versioning/update_message`);
+const footerPath = path_1.resolve(`${(_c = process.env.GITHUB_WORKSPACE) !== null && _c !== void 0 ? _c : process.cwd()}/.versioning/update_footer`);
 class ReleaseStatus {
     constructor() {
         this.shouldRelease = false;
@@ -283,9 +284,9 @@ class ReleaseContext {
             this.options = options;
             this.connection = github_1.getOctokit(options.token);
         }
-        this.updateFooter = fs_1.existsSync(__webpack_require__.ab + "update_footer") ? fs_1.readFileSync(footerPath).toString().trim() : undefined;
-        this.updateMessage = fs_1.existsSync(__webpack_require__.ab + "update_message") ? fs_1.readFileSync(messagePath).toString().trim() : undefined;
-        this.majorVersion = fs_1.existsSync(__webpack_require__.ab + "major_version") ? Number(fs_1.readFileSync(majorPath).toString().trim()) : 0;
+        this.updateFooter = fs_1.existsSync(footerPath) ? fs_1.readFileSync(footerPath).toString().trim() : undefined;
+        this.updateMessage = fs_1.existsSync(messagePath) ? fs_1.readFileSync(messagePath).toString().trim() : undefined;
+        this.majorVersion = fs_1.existsSync(majorPath) ? Number(fs_1.readFileSync(majorPath).toString().trim()) : 0;
     }
 }
 exports.ReleaseContext = ReleaseContext;
