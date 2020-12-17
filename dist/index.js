@@ -130,6 +130,7 @@ const changelog = (context) => {
     ${internalChangelog.trim()}
     \`\`\`
     - [ ] Changelogs are correct. (will trigger a merge + release)
+    <!-- version-bot-comment: changelog -->
   `.split('\n').map(line => line.trim()).join('\n');
     if (context.status.changelogCommentID != undefined) {
         (_a = context.connection) === null || _a === void 0 ? void 0 : _a.issues.updateComment({ ...github.context.repo, comment_id: context.status.changelogCommentID, body: comment });
