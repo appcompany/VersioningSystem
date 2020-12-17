@@ -1,4 +1,5 @@
 import { uniqueNamesGenerator, adjectives, colors, animals } from "unique-names-generator"
+import { Release, ReleaseContext, ReleaseTarget } from "./context"
 
 export enum VersionIncrease {
   major = 'major',
@@ -12,6 +13,9 @@ export const increaseOrder : VersionIncrease[] = [
 ]
 
 export class Version {
+
+  target: ReleaseTarget
+
   major: number
   minor: number 
   patch: number
@@ -21,6 +25,11 @@ export class Version {
   }
 
   constructor(text: string) {
+
+    if (text.includes('alpha')) this.target = ReleaseTarget.alpha
+    if (text.includes('beta')) this.target = ReleaseTarget.beta
+    else this.target = ReleaseTarget.appstore
+
     const split = text.replace(/[^0-9.]/g,'').split('.')
     this.major = Number(split[0] ?? '0') ?? 0
     this.minor = Number(split[1] ?? '0') ?? 0
@@ -59,10 +68,4 @@ export function nextVersion(current: Version, increase: VersionIncrease) : Versi
     nextVersion.major += 1
   }
   return nextVersion
-}
-
-export function versionName(used: string[]) : string {
-  const randomName = uniqueNamesGenerator({ dictionaries: [adjectives, colors, animals] });
-  if (used.includes(randomName)) return versionName(used)
-  else return randomName
 }

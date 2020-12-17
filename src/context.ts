@@ -5,6 +5,7 @@ import { GitHub } from '@actions/github/lib/utils'
 import * as core from '@actions/core'
 import * as github from '@actions/github'
 import { ChangelogSection, sections } from './changelog'
+import { currentVersion, Version } from './versions'
 
 const majorPath = resolve(`${process.env.GITHUB_WORKSPACE ?? process.cwd()}/.versioning/major_version`)
 const messagePath = resolve(`${process.env.GITHUB_WORKSPACE ?? process.cwd()}/.versioning/update_message`)
@@ -53,6 +54,7 @@ export class Release {
   id: number
   name: string
   tag: string
+  version: Version
   body: string
   prerelease: boolean
   commitish: string
@@ -63,6 +65,7 @@ export class Release {
     this.asset = input?.assets.find(asset => asset.name.toLowerCase().includes('release.json'))?.id
     this.commitish = input?.target_commitish ?? ''
     this.tag = input?.tag_name ?? ''
+    this.version = new Version(this.tag)
     this.name = input?.name ?? ''
     this.prerelease = input?.prerelease ?? true
     this.body = input?.body ?? ''
@@ -110,6 +113,9 @@ export class ReleaseContext {
 
   releaseTarget: ReleaseTarget = ReleaseTarget.invalid
 
+  currentVersion: Version | undefined
+  nextVersion: Version | undefined
+
   updateFooter: string | undefined
   updateMessage: string | undefined
   majorVersion: number
@@ -147,8 +153,10 @@ export class ReleaseContext {
     this.status.changelogCommentID = this.comments.find(comment => comment.content.includes('<!-- version-bot-comment: changelog -->'))?.id
 
     this.releases = (await this.connection?.paginate(
-      this.connection?.repos.listReleases, { ...github.context.repo }
+      this.connection?.repos.listReleases, { ...github.context.repo,  }
     ))?.flatMap(release => release != undefined ? [new Release(release)] : []) ?? []
+
+    this.currentVersion = currentVersion(this.releases.map(release => release.tag))
 
     callback()
 

@@ -1,5 +1,5 @@
-import { Change, ReleaseContext } from './context'
-import { VersionIncrease } from './versions'
+import { Change, Release, ReleaseContext } from './context'
+import { increaseOrder, Version, VersionIncrease } from './versions'
 import * as github from '@actions/github'
 
 export enum SectionType {
@@ -41,41 +41,44 @@ export const sections : ChangelogSection[] = [
   new ChangelogSection('Miscellaneous',   'misc',           ['misc','chore'],                                               SectionType.internal)
 ]
 
-export const changelog = (context: ReleaseContext) => {
-
-  const changelog = (() => {
-    if (context.options.changelog) {
-      var changelog = ''
-      for (const commit of context.commits.filter(commit => !commit.alreadyInBase)) {
-        for (const change of commit.changes) {
-          changelog += `[${change.section.tags[0]}]-> ${change.message}\n`
-        }
+export const log = (context: ReleaseContext) => {
+  if (context.options.changelog) {
+    var changelog = ''
+    for (const commit of context.commits.filter(commit => !commit.alreadyInBase)) {
+      for (const change of commit.changes) {
+        changelog += `[${change.section.tags[0]}]-> ${change.message}\n`
       }
-      return changelog
-    } else {
-      var open = false
-      var changelog = ''
-      for (const line of (context.comments.find(comment => comment.id == context.status.changelogCommentID)?.content ?? '').split('\n')) {
-        if (line.includes('<!-- begin-changelog-list -->')) open = true
-        else if (open && line.includes('<!-- end-changelog-list -->')) open = false
-        else if (open) changelog += `${line.replace(/[\`]/g,'').trim()}\n`
-      }
-      return changelog
     }
-  })()
+    return changelog
+  } else {
+    var open = false
+    var changelog = ''
+    for (const line of (context.comments.find(comment => comment.id == context.status.changelogCommentID)?.content ?? '').split('\n')) {
+      if (line.includes('<!-- begin-changelog-list -->')) open = true
+      else if (open && line.includes('<!-- end-changelog-list -->')) open = false
+      else if (open) changelog += `${line.replace(/[\`]/g,'').trim()}\n`
+    }
+    return changelog
+  }
+}
 
-  const changes : Change[] = changelog.split('\n').flatMap(line => {
+export const changelist = (changelog: string) => {
+
+  return changelog.split('\n').flatMap(line => {
     const regex = new RegExp(/\[(?<tag>.*?)\]\-\>/g)
     const tag = regex.exec(line)?.groups?.tag ?? ''
     const section = sections.find(section => section.tags.includes(tag))
     const message = line.replace(regex, '').trim()
     return section != undefined ? { section, message } : []
   })
-  const sectionTags = changes.map(change => change.section.tags[0])
-  
+
+}
+
+export const appStoreChangelog = (context: ReleaseContext, tags: string[], changes: Change[]) => {
+
   var appstoreChangelog = ''
   for (const section of sections.filter(section => section.type == SectionType.release)) {
-    if (sectionTags.includes(section.tags[0])) {
+    if (tags.includes(section.tags[0])) {
       appstoreChangelog += `\n${section.displayName}:\n`
       for (const change of changes.filter(change => change.section.tags[0] == section.tags[0])) {
         appstoreChangelog += `- ${change.message}\n`
@@ -83,9 +86,19 @@ export const changelog = (context: ReleaseContext) => {
     }
   }
 
+  return `
+    ${context.updateMessage}\n
+    ${appstoreChangelog.length == 0 ? 'No releaseable changes.' : appstoreChangelog.trim()}
+    \n${context.updateFooter}
+  `.split('\n').map(line => line.trim()).join('\n')
+
+}
+
+export const internalChangelog = (tags: string[], changes: Change[]) => {
+  
   var internalChangelog = ''
   for (const section of sections.filter(section => section.type == SectionType.internal)) {
-    if (sectionTags.includes(section.tags[0])) {
+    if (tags.includes(section.tags[0])) {
       internalChangelog += `\n${section.displayName}:\n`
       for (const change of changes.filter(change => change.section.tags[0] == section.tags[0])) {
         internalChangelog += `- ${change.message}\n`
@@ -93,7 +106,35 @@ export const changelog = (context: ReleaseContext) => {
     }
   }
 
+  return internalChangelog
+
+}
+
+export const nextVersion = (context: ReleaseContext, changes: Change[]) => {
+
+  var bump = VersionIncrease.none
+  for (const change of changes) {
+    if (increaseOrder.indexOf(change.section.increases) < increaseOrder.indexOf(bump)) bump = change.section.increases
+  }
+
+  return 
+
+}
+
+export const previewComment = (context: ReleaseContext) => {
+
+  const changelog = log(context)
+  const changes = changelist(changelog)
+  const tags = changes.map(change => change.section.tags[0])
+
+  const appstore = appStoreChangelog(context, tags, changes).trim()
+  const internal = internalChangelog(tags, changes).trim()
+
   const comment = `
+    # Version Information
+    >*current: ${ context.currentVersion?.display ?? '-' }*
+    > \`next: ${ nextVersion(context, changes) }\`
+
     # Changelogs.
     > please make any needed changes and wait for the preview to generate in a comment below.
     <!-- begin-changelog-list -->
@@ -103,13 +144,11 @@ export const changelog = (context: ReleaseContext) => {
     <!-- end-changelog-list -->
     ### App Store Preview
     \`\`\`
-    ${context.updateMessage}\n
-    ${appstoreChangelog.length == 0 ? 'No releaseable changes.' : appstoreChangelog.trim()}
-    \n${context.updateFooter}
+    ${appstore.length == 0 ? 'No releaseable changes.' : appstore}
     \`\`\`
     ##### Internal Preview
     \`\`\`
-    ${internalChangelog.length == 0 ? 'No internal changes.' : internalChangelog.trim()}
+    ${internal.length == 0 ? 'No internal changes.' : internal}
     \`\`\`
     - [ ] Changelogs are correct. (will trigger a merge + release)
     <!-- version-bot-comment: changelog -->

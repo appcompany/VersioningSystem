@@ -1,9 +1,6 @@
 import * as core from '@actions/core'
-import * as github from '@actions/github' 
-// import { analyze, extractList, generateComment } from './analyze'
-// import { uniqueNamesGenerator, adjectives, colors, animals } from 'unique-names-generator'
-import { changelog, sections, SectionType } from './changelog'
-import { Change, ReleaseContext } from './context'
+import { previewComment } from './changelog'
+import { ReleaseContext } from './context'
 
 try {
   const context = new ReleaseContext()
@@ -17,7 +14,7 @@ try {
     if (context.options.labels) {
       // set labels
     }
-    if (context.options.preview || context.options.changelog) changelog(context)
+    if (context.options.preview || context.options.changelog) previewComment(context)
     if (context.options.release) {
       // create release
     }
