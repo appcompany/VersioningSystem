@@ -21,6 +21,10 @@ inputs:
     description: 'update labels of pull request'
     required: false
     default: 'false'
+  preview:
+    description: 'generate preview for changelog'
+    required: false
+    default: false
   changelog:
     description: 'generate changelog'
     required: false

@@ -156,7 +156,7 @@ export class ReleaseContext {
 
   constructor(options: SystemOptions = new SystemOptions()) {
 
-    if (github.context.payload.pull_request == null && process.env.TESTING !== 'true') {
+    if (Number(core.getInput('pullRequest') ?? '') == NaN && process.env.TESTING !== 'true') {
       throw Error('Unable to find pull request, make sure to run this action with pull requests only.')
     }
 
