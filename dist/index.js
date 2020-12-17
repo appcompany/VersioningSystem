@@ -118,16 +118,16 @@ const changelog = (context) => {
     > please make any needed changes and wait for the preview to generate in a comment below.
     <!-- begin-changelog-list -->
     \`\`\`
-    ${changelog.trim()}
+    ${changelog.length == 0 ? '-' : changelog.trim()}
     \`\`\`
     <!-- end-changelog-list -->
     ### App Store Preview
     \`\`\`
-    ${appstoreChangelog.trim()}
+    ${appstoreChangelog.length == 0 ? 'No releaseable changes.' : appstoreChangelog.trim()}
     \`\`\`
     ##### Internal Preview
     \`\`\`
-    ${internalChangelog.trim()}
+    ${internalChangelog.length == 0 ? 'No internal changes.' : internalChangelog.trim()}
     \`\`\`
     - [ ] Changelogs are correct. (will trigger a merge + release)
     <!-- version-bot-comment: changelog -->
