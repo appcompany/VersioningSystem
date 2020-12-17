@@ -1,9 +1,6 @@
 
 <!-- changes-begin (do no remove this line) -->
 ```
-[bug]-> test statement.
-[bugfix]-> test statement.
-[fix]-> test statement.
 [feature]-> test statement.
 [feat]-> test statement.
 [new-feat]-> test statement.
@@ -11,6 +8,9 @@
 [change]-> test statement.
 [refactor]-> test statement.
 [changes]-> test statement.
+[bug]-> test statement.
+[bugfix]-> test statement.
+[fix]-> test statement.
 [language]-> test statement.
 [lang]-> test statement.
 [new-lang]-> test statement.

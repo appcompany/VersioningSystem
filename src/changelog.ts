@@ -29,9 +29,9 @@ export class ChangelogSection {
 
 // ordered list of changelog sections
 export const sections : ChangelogSection[] = [
-  new ChangelogSection('Bug Fixes',       'bug',            ['bug','bugfix','fix'],                                         SectionType.release, VersionIncrease.minor),
   new ChangelogSection('New Features',    'feature',        ['feature','feat','new-feat','new-feature'],                    SectionType.release, VersionIncrease.patch),
   new ChangelogSection('Changes',         'change',         ['change','refactor','changes'],                                SectionType.release, VersionIncrease.minor),
+  new ChangelogSection('Bug Fixes',       'bug',            ['bug','bugfix','fix'],                                         SectionType.release, VersionIncrease.minor),
   new ChangelogSection('Languages',       'language',       ['language','lang','new-lang','new-language'],                  SectionType.release, VersionIncrease.minor),
   new ChangelogSection('Language Fixes',  'language-fix',   ['language-fix','lang-fix','lang(fix)','langfix','fix-lang'],   SectionType.release, VersionIncrease.patch),
   new ChangelogSection('Metadata',        'metadata',       ['metadata','meta'],                                            SectionType.release, VersionIncrease.patch, true),
@@ -76,7 +76,7 @@ export const changelog = (context: ReleaseContext) => {
   var appstoreChangelog = ''
   for (const section of sections.filter(section => section.type == SectionType.release)) {
     if (sectionTags.includes(section.tags[0])) {
-      appstoreChangelog += `${section.displayName}:\n`
+      appstoreChangelog += `\n${section.displayName}:\n`
       for (const change of changes.filter(change => change.section.tags[0] == section.tags[0])) {
         appstoreChangelog += `- ${change.message}\n`
       }
@@ -86,7 +86,7 @@ export const changelog = (context: ReleaseContext) => {
   var internalChangelog = ''
   for (const section of sections.filter(section => section.type == SectionType.internal)) {
     if (sectionTags.includes(section.tags[0])) {
-      internalChangelog += `${section.displayName}:\n`
+      internalChangelog += `\n${section.displayName}:\n`
       for (const change of changes.filter(change => change.section.tags[0] == section.tags[0])) {
         internalChangelog += `- ${change.message}\n`
       }
