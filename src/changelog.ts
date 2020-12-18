@@ -126,6 +126,7 @@ export const previewComment = (context: ReleaseContext) => {
 
   const comment = `
     # Version Information
+    > creates release: ${ context.canRelease ? 'yes' : 'no' }
     >*current: ${ context.currentVersion?.display ?? '-' }*
     > \`next: ${ `${nextVersion(context.currentVersion ?? new Version('0.0.1'), bump).display}${ context.releaseTarget != ReleaseTarget.appstore ? `-${context.releaseTarget}` : '' }` }\`
 
