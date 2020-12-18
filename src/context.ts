@@ -4,7 +4,7 @@ import { getOctokit } from '@actions/github'
 import { GitHub } from '@actions/github/lib/utils'
 import * as core from '@actions/core'
 import * as github from '@actions/github'
-import { ChangelogSection, sections } from './changelog'
+import { changelist, log, ChangelogSection, sections, SectionType } from './changelog'
 import { currentVersion, Version } from './versions'
 
 const majorPath = resolve(`${process.env.GITHUB_WORKSPACE ?? process.cwd()}/.versioning/major_version`)
@@ -115,6 +115,7 @@ export class ReleaseContext {
 
   currentVersion: Version | undefined
   nextVersion: Version | undefined
+  canRelease: boolean = false
 
   updateFooter: string | undefined
   updateMessage: string | undefined
@@ -160,6 +161,7 @@ export class ReleaseContext {
     ))?.flatMap(release => release != undefined ? [new Release(release)] : []) ?? []
 
     this.currentVersion = currentVersion(this.releases)
+    this.canRelease = changelist(log(this)).map(change => change.section.type).includes(SectionType.release)
 
     callback()
 
