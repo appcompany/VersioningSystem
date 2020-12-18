@@ -12,6 +12,9 @@ try {
 
   context.load(async () => { 
 
+    if (context.options.label_for_release) {
+      if (!context.labels.includes('released')) await context.connection?.issues.addLabels({ ...github.context.repo, issue_number: context.pullNumber, labels: ['released'] })
+    }
     if (context.options.labels) {
 
       const labels = changelist(log(context)).map(change => change.section.tags[0])
