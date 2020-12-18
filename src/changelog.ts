@@ -1,5 +1,5 @@
 import { Change, Release, ReleaseContext } from './context'
-import { increaseOrder, Version, VersionIncrease } from './versions'
+import { increaseOrder, nextVersion, Version, VersionIncrease } from './versions'
 import * as github from '@actions/github'
 
 export enum SectionType {
@@ -110,17 +110,6 @@ export const internalChangelog = (tags: string[], changes: Change[]) => {
 
 }
 
-export const nextVersion = (context: ReleaseContext, changes: Change[]) => {
-
-  var bump = VersionIncrease.none
-  for (const change of changes) {
-    if (increaseOrder.indexOf(change.section.increases) < increaseOrder.indexOf(bump)) bump = change.section.increases
-  }
-
-  return 
-
-}
-
 export const previewComment = (context: ReleaseContext) => {
 
   const changelog = log(context)
@@ -130,10 +119,15 @@ export const previewComment = (context: ReleaseContext) => {
   const appstore = appStoreChangelog(context, tags, changes).trim()
   const internal = internalChangelog(tags, changes).trim()
 
+  var bump = VersionIncrease.none
+  for (const change of changes) {
+    if (increaseOrder.indexOf(change.section.increases) < increaseOrder.indexOf(bump)) bump = change.section.increases
+  }
+
   const comment = `
     # Version Information
     >*current: ${ context.currentVersion?.display ?? '-' }*
-    > \`next: ${ nextVersion(context, changes) }\`
+    > \`next: ${ nextVersion(context.currentVersion ?? new Version('0.0.1'), bump) }\`
 
     # Changelogs.
     > please make any needed changes and wait for the preview to generate in a comment below.
