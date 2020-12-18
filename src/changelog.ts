@@ -128,7 +128,7 @@ export const previewComment = (context: ReleaseContext) => {
     # Version Information
     > creates release: ${ context.canRelease ? 'yes' : 'no' }
     >*current: ${ context.currentVersion?.display ?? '-' }*
-    > \`next: ${ `${nextVersion(context.currentVersion ?? new Version('0.0.1'), bump).display}${ context.releaseTarget != ReleaseTarget.appstore ? `-${context.releaseTarget}` : '' }` }\`
+    > \`next: ${ context.canRelease ? `${nextVersion(context.currentVersion ?? new Version('0.0.1'), bump).display}${ context.releaseTarget != ReleaseTarget.appstore ? `-${context.releaseTarget}` : '' }` : '-' }\`
 
     # Changelogs.
     > please make any needed changes and wait for the preview to generate in a comment below.
@@ -139,7 +139,7 @@ export const previewComment = (context: ReleaseContext) => {
     <!-- end-changelog-list -->
     ### App Store Preview
     \`\`\`
-    ${appstore.length == 0 ? 'No releaseable changes.' : appstore}
+    ${appstore.length == 0 || !context.canRelease ? 'No releaseable changes.' : appstore}
     \`\`\`
     ##### Internal Preview
     \`\`\`

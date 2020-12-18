@@ -143,7 +143,7 @@ const previewComment = (context) => {
     # Version Information
     > creates release: ${context.canRelease ? 'yes' : 'no'}
     >*current: ${(_b = (_a = context.currentVersion) === null || _a === void 0 ? void 0 : _a.display) !== null && _b !== void 0 ? _b : '-'}*
-    > \`next: ${`${versions_1.nextVersion((_c = context.currentVersion) !== null && _c !== void 0 ? _c : new versions_1.Version('0.0.1'), bump).display}${context.releaseTarget != context_1.ReleaseTarget.appstore ? `-${context.releaseTarget}` : ''}`}\`
+    > \`next: ${context.canRelease ? `${versions_1.nextVersion((_c = context.currentVersion) !== null && _c !== void 0 ? _c : new versions_1.Version('0.0.1'), bump).display}${context.releaseTarget != context_1.ReleaseTarget.appstore ? `-${context.releaseTarget}` : ''}` : '-'}\`
 
     # Changelogs.
     > please make any needed changes and wait for the preview to generate in a comment below.
@@ -154,7 +154,7 @@ const previewComment = (context) => {
     <!-- end-changelog-list -->
     ### App Store Preview
     \`\`\`
-    ${appstore.length == 0 ? 'No releaseable changes.' : appstore}
+    ${appstore.length == 0 || !context.canRelease ? 'No releaseable changes.' : appstore}
     \`\`\`
     ##### Internal Preview
     \`\`\`
