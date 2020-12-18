@@ -156,7 +156,7 @@ export class ReleaseContext {
       this.connection?.repos.listReleases, { ...github.context.repo,  }
     ))?.flatMap(release => release != undefined ? [new Release(release)] : []) ?? []
 
-    this.currentVersion = currentVersion(this.releases.map(release => release.tag))
+    this.currentVersion = currentVersion(this.releases)
 
     callback()
 

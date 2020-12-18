@@ -28,6 +28,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.previewComment = exports.internalChangelog = exports.appStoreChangelog = exports.changelist = exports.log = exports.sections = exports.ChangelogSection = exports.SectionType = void 0;
+const context_1 = __webpack_require__(842);
 const versions_1 = __webpack_require__(332);
 const github = __importStar(__webpack_require__(438));
 var SectionType;
@@ -141,7 +142,7 @@ const previewComment = (context) => {
     const comment = `
     # Version Information
     >*current: ${(_b = (_a = context.currentVersion) === null || _a === void 0 ? void 0 : _a.display) !== null && _b !== void 0 ? _b : '-'}*
-    > \`next: ${versions_1.nextVersion((_c = context.currentVersion) !== null && _c !== void 0 ? _c : new versions_1.Version('0.0.1'), bump)}\`
+    > \`next: ${`${versions_1.nextVersion((_c = context.currentVersion) !== null && _c !== void 0 ? _c : new versions_1.Version('0.0.1'), bump).display}${context.releaseTarget != context_1.ReleaseTarget.appstore ? `-${context.releaseTarget}` : ''}`}\`
 
     # Changelogs.
     > please make any needed changes and wait for the preview to generate in a comment below.
@@ -304,7 +305,7 @@ class ReleaseContext {
             this.comments = ((_q = (await ((_o = this.connection) === null || _o === void 0 ? void 0 : _o.paginate((_p = this.connection) === null || _p === void 0 ? void 0 : _p.issues.listComments, { ...github.context.repo, issue_number: this.pullNumber })))) !== null && _q !== void 0 ? _q : []).flatMap(comment => comment != undefined ? [new Comment(comment)] : []);
             this.status.changelogCommentID = (_r = this.comments.find(comment => comment.content.includes('<!-- version-bot-comment: changelog -->'))) === null || _r === void 0 ? void 0 : _r.id;
             this.releases = (_v = (_u = (await ((_s = this.connection) === null || _s === void 0 ? void 0 : _s.paginate((_t = this.connection) === null || _t === void 0 ? void 0 : _t.repos.listReleases, { ...github.context.repo, })))) === null || _u === void 0 ? void 0 : _u.flatMap(release => release != undefined ? [new Release(release)] : [])) !== null && _v !== void 0 ? _v : [];
-            this.currentVersion = versions_1.currentVersion(this.releases.map(release => release.tag));
+            this.currentVersion = versions_1.currentVersion(this.releases);
             callback();
         };
         if (Number((_b = core.getInput('pullRequest')) !== null && _b !== void 0 ? _b : '') == NaN && process.env.TESTING !== 'true') {
@@ -414,7 +415,7 @@ class Version {
 exports.Version = Version;
 function currentVersion(releases) {
     var _a;
-    return (_a = releases.filter(release => !release.includes('-')).map(release => new Version(release)).sort((lhs, rhs) => {
+    return (_a = releases.filter(release => release.version.target == context_1.ReleaseTarget.appstore).map(release => release.version).sort((lhs, rhs) => {
         if (lhs.major == rhs.major) {
             if (lhs.minor == rhs.minor) {
                 if (lhs.patch == rhs.patch)

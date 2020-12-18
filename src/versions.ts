@@ -1,5 +1,4 @@
-import { uniqueNamesGenerator, adjectives, colors, animals } from "unique-names-generator"
-import { Release, ReleaseContext, ReleaseTarget } from "./context"
+import { Release, ReleaseTarget } from "./context"
 
 export enum VersionIncrease {
   major = 'major',
@@ -38,8 +37,8 @@ export class Version {
 
 }
 
-export function currentVersion(releases: string[]) : Version {
-  return releases.filter(release => !release.includes('-')).map(release => new Version(release)).sort((lhs,rhs) => {
+export function currentVersion(releases: Release[]) : Version {
+  return releases.filter(release => release.version.target == ReleaseTarget.appstore).map(release => release.version).sort((lhs,rhs) => {
     if (lhs.major == rhs.major) {
       if (lhs.minor == rhs.minor) {
         if (lhs.patch == rhs.patch) return 0

@@ -1,4 +1,4 @@
-import { Change, Release, ReleaseContext } from './context'
+import { Change, Release, ReleaseContext, ReleaseTarget } from './context'
 import { increaseOrder, nextVersion, Version, VersionIncrease } from './versions'
 import * as github from '@actions/github'
 
@@ -127,7 +127,7 @@ export const previewComment = (context: ReleaseContext) => {
   const comment = `
     # Version Information
     >*current: ${ context.currentVersion?.display ?? '-' }*
-    > \`next: ${ nextVersion(context.currentVersion ?? new Version('0.0.1'), bump) }\`
+    > \`next: ${ `${nextVersion(context.currentVersion ?? new Version('0.0.1'), bump).display}${ context.releaseTarget != ReleaseTarget.appstore ? `-${context.releaseTarget}` : '' }` }\`
 
     # Changelogs.
     > please make any needed changes and wait for the preview to generate in a comment below.
