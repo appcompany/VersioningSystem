@@ -29,9 +29,9 @@ export class ChangelogSection {
 
 // ordered list of changelog sections
 export const sections : ChangelogSection[] = [
-  new ChangelogSection('New Features',    'feature',        ['feature','feat','new-feat','new-feature'],                    SectionType.release, VersionIncrease.patch),
+  new ChangelogSection('New Features',    'feature',        ['feature','feat','new-feat','new-feature'],                    SectionType.release, VersionIncrease.minor),
   new ChangelogSection('Changes',         'change',         ['change','refactor','changes'],                                SectionType.release, VersionIncrease.minor),
-  new ChangelogSection('Bug Fixes',       'bug',            ['bug','bugfix','fix'],                                         SectionType.release, VersionIncrease.minor),
+  new ChangelogSection('Bug Fixes',       'bug',            ['bug','bugfix','fix'],                                         SectionType.release, VersionIncrease.patch),
   new ChangelogSection('Languages',       'language',       ['language','lang','new-lang','new-language'],                  SectionType.release, VersionIncrease.minor),
   new ChangelogSection('Language Fixes',  'language-fix',   ['language-fix','lang-fix','lang(fix)','langfix','fix-lang'],   SectionType.release, VersionIncrease.patch),
   new ChangelogSection('Metadata',        'metadata',       ['metadata','meta'],                                            SectionType.release, VersionIncrease.patch, true),
