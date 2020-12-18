@@ -357,6 +357,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 const core = __importStar(__webpack_require__(186));
+const github = __importStar(__webpack_require__(438));
 const changelog_1 = __webpack_require__(82);
 const context_1 = __webpack_require__(842);
 try {
@@ -364,9 +365,22 @@ try {
     if (context.options.token == '' || context.options.token == undefined) {
         throw Error('No token supplied, please provide a working access token.');
     }
-    context.load(() => {
+    context.load(async () => {
+        var _a, _b;
         if (context.options.labels) {
-            // set labels
+            const labels = changelog_1.changelist(changelog_1.log(context)).map(change => change.section.tags[0]);
+            var toAdd = [];
+            var toRemove = [];
+            for (const label of changelog_1.sections.map(section => section.tags[0])) {
+                if (labels.includes(label) && !context.labels.includes(label))
+                    toAdd.push(label);
+                if (!labels.includes(label) && context.labels.includes(label))
+                    toRemove.push(label);
+            }
+            await ((_a = context.connection) === null || _a === void 0 ? void 0 : _a.issues.addLabels({ ...github.context.repo, issue_number: context.pullNumber, labels: toAdd }));
+            for (const label of toRemove) {
+                await ((_b = context.connection) === null || _b === void 0 ? void 0 : _b.issues.removeLabel({ ...github.context.repo, issue_number: context.pullNumber, name: label }));
+            }
         }
         if (context.options.preview || context.options.changelog)
             changelog_1.previewComment(context);
