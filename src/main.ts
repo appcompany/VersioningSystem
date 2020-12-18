@@ -22,7 +22,7 @@ try {
         if (!labels.includes(label) && context.labels.includes(label)) toRemove.push(label)
       }
 
-      await context.connection?.issues.addLabels({ ...github.context.repo, issue_number: context.pullNumber, labels: toAdd })
+      if (toAdd.length > 0) await context.connection?.issues.addLabels({ ...github.context.repo, issue_number: context.pullNumber, labels: toAdd })
       for (const label of toRemove) {
         await context.connection?.issues.removeLabel({ ...github.context.repo, issue_number: context.pullNumber, name: label })
       }
