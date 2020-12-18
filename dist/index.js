@@ -292,14 +292,16 @@ class ReleaseContext {
             for (const commit of this.commits) {
                 commit.alreadyInBase = ['identical', 'behind'].includes((_m = (_l = (await ((_h = this.connection) === null || _h === void 0 ? void 0 : _h.repos.compareCommits({ ...github.context.repo, base: (_j = data === null || data === void 0 ? void 0 : data.base.ref) !== null && _j !== void 0 ? _j : '', head: (_k = commit.sha) !== null && _k !== void 0 ? _k : '' })))) === null || _l === void 0 ? void 0 : _l.data.status) !== null && _m !== void 0 ? _m : '');
             }
-            console.log(data === null || data === void 0 ? void 0 : data.base.ref);
-            switch (data === null || data === void 0 ? void 0 : data.base.ref) {
+            switch (data === null || data === void 0 ? void 0 : data.base.ref.trim()) {
                 case 'appstore':
                     this.releaseTarget = ReleaseTarget.appstore;
+                    break;
                 case 'alpha':
                     this.releaseTarget = ReleaseTarget.alpha;
+                    break;
                 case 'beta':
                     this.releaseTarget = ReleaseTarget.beta;
+                    break;
                 default:
                     this.releaseTarget = ReleaseTarget.invalid;
             }

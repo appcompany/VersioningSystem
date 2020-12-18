@@ -135,15 +135,16 @@ export class ReleaseContext {
       commit.alreadyInBase = ['identical','behind'].includes((await this.connection?.repos.compareCommits({ ...github.context.repo, base: data?.base.ref ?? '', head: commit.sha ?? '' }))?.data.status ?? '')
     }
 
-    console.log(data?.base.ref)
-
-    switch (data?.base.ref) {
+    switch (data?.base.ref.trim()) {
       case 'appstore':
         this.releaseTarget = ReleaseTarget.appstore
+        break
       case 'alpha':
         this.releaseTarget = ReleaseTarget.alpha
+        break
       case 'beta':
         this.releaseTarget = ReleaseTarget.beta
+        break
       default:
         this.releaseTarget = ReleaseTarget.invalid
     }
