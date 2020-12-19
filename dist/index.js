@@ -160,7 +160,7 @@ const previewComment = (context) => {
     \`\`\`
     ${internal.length == 0 ? 'No internal changes.' : internal}
     \`\`\`
-    > add the \`released\` tag to this pull request to create this release.
+    > add the \`create-release\` tag to this pull request to create this release.
     <!-- version-bot-comment: changelog -->
   `.split('\n').map(line => line.trim()).join('\n');
     if (context.status.changelogCommentID != undefined) {
@@ -386,7 +386,7 @@ try {
         if (context.options.preview || context.options.changelog)
             changelog_1.previewComment(context);
         if (context.options.release) {
-            if (context.canRelease && ((_c = context.nextVersion) === null || _c === void 0 ? void 0 : _c.display) != undefined) {
+            if (((_c = context.nextVersion) === null || _c === void 0 ? void 0 : _c.display) != undefined) {
                 const sha = (_e = (await ((_d = context.connection) === null || _d === void 0 ? void 0 : _d.pulls.merge({
                     ...github.context.repo,
                     pull_number: context.pullNumber,
