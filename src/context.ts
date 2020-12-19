@@ -107,8 +107,6 @@ export class ReleaseContext {
   requestBody : string | undefined
 
   pullNumber : number = Number(core.getInput('pullRequest') ?? '0')
-  canMerge = true
-  isClosed = true
 
   labels: string[] = []
   releases: Release[] = []
@@ -131,8 +129,6 @@ export class ReleaseContext {
     this.labels = (data?.labels ?? []).map(label => label?.name ?? '').filter(label => label != undefined)
     this.requestBody = data?.body ?? ''
     this.status.didMerge = data?.merged
-    this.canMerge = data?.merged == false && data?.mergeable == true
-    this.isClosed = data?.closed_at != null
 
     this.commits = (await this.connection?.paginate(
       this.connection.pulls.listCommits, { ...github.context.repo, pull_number: this.pullNumber }

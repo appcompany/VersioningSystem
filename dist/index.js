@@ -140,13 +140,13 @@ const previewComment = (context) => {
             bump = change.section.increases;
     }
     const comment = `
-    # Version Information
+    # Versions.
     > creates release: ${context.canRelease ? 'yes' : 'no'}
     >*current: ${(_b = (_a = context.currentVersion) === null || _a === void 0 ? void 0 : _a.display) !== null && _b !== void 0 ? _b : '-'}*
     > \`next: ${context.canRelease ? `${versions_1.nextVersion((_c = context.currentVersion) !== null && _c !== void 0 ? _c : new versions_1.Version('0.0.1'), bump).display}${context.releaseTarget != context_1.ReleaseTarget.appstore ? `-${context.releaseTarget}` : ''}` : '-'}\`
 
     # Changelogs.
-    > please make any needed changes and wait for the preview to generate in a comment below.
+    > please make any needed changes and wait for the preview to generate in this comment.
     <!-- begin-changelog-list -->
     \`\`\`
     ${changelog.length == 0 ? '-' : changelog.trim()}
@@ -160,7 +160,7 @@ const previewComment = (context) => {
     \`\`\`
     ${internal.length == 0 ? 'No internal changes.' : internal}
     \`\`\`
-    - [ ] Changelogs are correct. (will trigger a merge + release)
+    > add the \`released\` tag to this pull request to create this release.
     <!-- version-bot-comment: changelog -->
   `.split('\n').map(line => line.trim()).join('\n');
     if (context.status.changelogCommentID != undefined) {
@@ -279,8 +279,6 @@ class ReleaseContext {
         this.options = new SystemOptions();
         this.status = new ReleaseStatus();
         this.pullNumber = Number((_a = core.getInput('pullRequest')) !== null && _a !== void 0 ? _a : '0');
-        this.canMerge = true;
-        this.isClosed = true;
         this.labels = [];
         this.releases = [];
         this.comments = [];
@@ -293,8 +291,6 @@ class ReleaseContext {
             this.labels = ((_c = data === null || data === void 0 ? void 0 : data.labels) !== null && _c !== void 0 ? _c : []).map(label => { var _a; return (_a = label === null || label === void 0 ? void 0 : label.name) !== null && _a !== void 0 ? _a : ''; }).filter(label => label != undefined);
             this.requestBody = (_d = data === null || data === void 0 ? void 0 : data.body) !== null && _d !== void 0 ? _d : '';
             this.status.didMerge = data === null || data === void 0 ? void 0 : data.merged;
-            this.canMerge = (data === null || data === void 0 ? void 0 : data.merged) == false && (data === null || data === void 0 ? void 0 : data.mergeable) == true;
-            this.isClosed = (data === null || data === void 0 ? void 0 : data.closed_at) != null;
             this.commits = (_g = (_f = (await ((_e = this.connection) === null || _e === void 0 ? void 0 : _e.paginate(this.connection.pulls.listCommits, { ...github.context.repo, pull_number: this.pullNumber })))) === null || _f === void 0 ? void 0 : _f.map(commit => new Commit({ ...commit }))) !== null && _g !== void 0 ? _g : [];
             for (const commit of this.commits) {
                 commit.alreadyInBase = ['identical', 'behind'].includes((_m = (_l = (await ((_h = this.connection) === null || _h === void 0 ? void 0 : _h.repos.compareCommits({ ...github.context.repo, base: (_j = data === null || data === void 0 ? void 0 : data.base.ref) !== null && _j !== void 0 ? _j : '', head: (_k = commit.sha) !== null && _k !== void 0 ? _k : '' })))) === null || _l === void 0 ? void 0 : _l.data.status) !== null && _m !== void 0 ? _m : '');
@@ -396,7 +392,7 @@ try {
         if (context.options.preview || context.options.changelog)
             changelog_1.previewComment(context);
         if (context.options.release) {
-            if (context.canRelease && context.canMerge && !context.isClosed && ((_d = context.nextVersion) === null || _d === void 0 ? void 0 : _d.display) != undefined) {
+            if (context.canRelease && ((_d = context.nextVersion) === null || _d === void 0 ? void 0 : _d.display) != undefined) {
                 const sha = (_f = (await ((_e = context.connection) === null || _e === void 0 ? void 0 : _e.pulls.merge({
                     ...github.context.repo,
                     pull_number: context.pullNumber,

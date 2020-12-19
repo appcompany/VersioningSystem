@@ -125,13 +125,13 @@ export const previewComment = (context: ReleaseContext) => {
   }
 
   const comment = `
-    # Version Information
+    # Versions.
     > creates release: ${ context.canRelease ? 'yes' : 'no' }
     >*current: ${ context.currentVersion?.display ?? '-' }*
     > \`next: ${ context.canRelease ? `${nextVersion(context.currentVersion ?? new Version('0.0.1'), bump).display}${ context.releaseTarget != ReleaseTarget.appstore ? `-${context.releaseTarget}` : '' }` : '-' }\`
 
     # Changelogs.
-    > please make any needed changes and wait for the preview to generate in a comment below.
+    > please make any needed changes and wait for the preview to generate in this comment.
     <!-- begin-changelog-list -->
     \`\`\`
     ${changelog.length == 0 ? '-' : changelog.trim()}
@@ -145,7 +145,7 @@ export const previewComment = (context: ReleaseContext) => {
     \`\`\`
     ${internal.length == 0 ? 'No internal changes.' : internal}
     \`\`\`
-    - [ ] Changelogs are correct. (will trigger a merge + release)
+    > add the \`released\` tag to this pull request to create this release.
     <!-- version-bot-comment: changelog -->
   `.split('\n').map(line => line.trim()).join('\n')
   if (context.status.changelogCommentID != undefined) {
