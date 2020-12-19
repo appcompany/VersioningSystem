@@ -17,10 +17,6 @@ inputs:
     description: 'create a release for a pull request'
     required: false
     default: 'false'
-  label-for-release:
-    description: 'add the released label to a pull request'
-    required: false
-    default: 'false'
   labels:
     description: 'update labels of pull request'
     required: false

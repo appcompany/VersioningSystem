@@ -26,13 +26,11 @@ export class SystemOptions {
   labels: boolean
   changelog: boolean
   preview: boolean
-  label_for_release: boolean
 
   constructor() {
     this.token = core.getInput('token')
     this.release = ['yes','true'].includes(core.getInput('release').toLowerCase())
     this.labels = ['yes','true'].includes(core.getInput('labels').toLowerCase())
-    this.label_for_release = ['yes','true'].includes(core.getInput('label-for-release'))
     this.changelog = ['yes','true'].includes(core.getInput('changelog').toLowerCase())
     this.preview = ['yes','true'].includes(core.getInput('preview').toLowerCase())
   }

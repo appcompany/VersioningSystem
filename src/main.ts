@@ -1,6 +1,5 @@
 import * as core from '@actions/core'
 import * as github from '@actions/github'
-import { release } from 'os'
 import { appStoreChangelog, changelist, internalChangelog, log, previewComment, sections } from './changelog'
 import { ReleaseContext, ReleaseTarget } from './context'
 
@@ -13,11 +12,6 @@ try {
 
   context.load(async () => { 
 
-    if (context.options.label_for_release) {
-      if (!context.labels.includes('released')) {
-        await context.connection?.issues.addLabels({ ...github.context.repo, issue_number: context.pullNumber, labels: ['released'] })
-      }
-    }
     if (context.options.labels) {
 
       const labels = changelist(log(context)).map(change => change.section.tags[0])

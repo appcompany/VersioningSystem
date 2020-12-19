@@ -223,7 +223,6 @@ class SystemOptions {
         this.token = core.getInput('token');
         this.release = ['yes', 'true'].includes(core.getInput('release').toLowerCase());
         this.labels = ['yes', 'true'].includes(core.getInput('labels').toLowerCase());
-        this.label_for_release = ['yes', 'true'].includes(core.getInput('label-for-release'));
         this.changelog = ['yes', 'true'].includes(core.getInput('changelog').toLowerCase());
         this.preview = ['yes', 'true'].includes(core.getInput('preview').toLowerCase());
     }
@@ -367,12 +366,7 @@ try {
         throw Error('No token supplied, please provide a working access token.');
     }
     context.load(async () => {
-        var _a, _b, _c, _d, _e, _f, _g, _h, _j;
-        if (context.options.label_for_release) {
-            if (!context.labels.includes('released')) {
-                await ((_a = context.connection) === null || _a === void 0 ? void 0 : _a.issues.addLabels({ ...github.context.repo, issue_number: context.pullNumber, labels: ['released'] }));
-            }
-        }
+        var _a, _b, _c, _d, _e, _f, _g, _h;
         if (context.options.labels) {
             const labels = changelog_1.changelist(changelog_1.log(context)).map(change => change.section.tags[0]);
             var toAdd = [];
@@ -384,29 +378,29 @@ try {
                     toRemove.push(label);
             }
             if (toAdd.length > 0)
-                await ((_b = context.connection) === null || _b === void 0 ? void 0 : _b.issues.addLabels({ ...github.context.repo, issue_number: context.pullNumber, labels: toAdd }));
+                await ((_a = context.connection) === null || _a === void 0 ? void 0 : _a.issues.addLabels({ ...github.context.repo, issue_number: context.pullNumber, labels: toAdd }));
             for (const label of toRemove) {
-                await ((_c = context.connection) === null || _c === void 0 ? void 0 : _c.issues.removeLabel({ ...github.context.repo, issue_number: context.pullNumber, name: label }));
+                await ((_b = context.connection) === null || _b === void 0 ? void 0 : _b.issues.removeLabel({ ...github.context.repo, issue_number: context.pullNumber, name: label }));
             }
         }
         if (context.options.preview || context.options.changelog)
             changelog_1.previewComment(context);
         if (context.options.release) {
-            if (context.canRelease && ((_d = context.nextVersion) === null || _d === void 0 ? void 0 : _d.display) != undefined) {
-                const sha = (_f = (await ((_e = context.connection) === null || _e === void 0 ? void 0 : _e.pulls.merge({
+            if (context.canRelease && ((_c = context.nextVersion) === null || _c === void 0 ? void 0 : _c.display) != undefined) {
+                const sha = (_e = (await ((_d = context.connection) === null || _d === void 0 ? void 0 : _d.pulls.merge({
                     ...github.context.repo,
                     pull_number: context.pullNumber,
                     merge_method: 'squash',
                     commit_title: `merging v${context.nextVersion.display} into ${context.releaseTarget}`,
                     commit_message: changelog_1.log(context)
-                })))) === null || _f === void 0 ? void 0 : _f.data.sha;
+                })))) === null || _e === void 0 ? void 0 : _e.data.sha;
                 if (sha != undefined) {
                     const changelog = changelog_1.log(context);
                     const changes = changelog_1.changelist(changelog);
                     const tags = changes.map(change => change.section.tags[0]);
                     const appstore = changelog_1.appStoreChangelog(context, tags, changes).trim();
                     const internal = changelog_1.internalChangelog(tags, changes).trim();
-                    const release_id = (_h = (await ((_g = context.connection) === null || _g === void 0 ? void 0 : _g.repos.createRelease({
+                    const release_id = (_g = (await ((_f = context.connection) === null || _f === void 0 ? void 0 : _f.repos.createRelease({
                         ...github.context.repo,
                         tag_name: context.nextVersion.display,
                         target_commitish: sha,
@@ -414,9 +408,9 @@ try {
                         body: `${appstore}\n\n${internal}`.trim(),
                         draft: true,
                         prerelease: context.releaseTarget != context_1.ReleaseTarget.appstore
-                    })))) === null || _h === void 0 ? void 0 : _h.data.id;
+                    })))) === null || _g === void 0 ? void 0 : _g.data.id;
                     if (release_id) {
-                        (_j = context.connection) === null || _j === void 0 ? void 0 : _j.repos.uploadReleaseAsset({ ...github.context.repo, release_id, name: 'release.json', data: JSON.stringify({
+                        (_h = context.connection) === null || _h === void 0 ? void 0 : _h.repos.uploadReleaseAsset({ ...github.context.repo, release_id, name: 'release.json', data: JSON.stringify({
                                 prev_version: context.currentVersion,
                                 version: context.nextVersion,
                                 changes: changelog_1.changelist(changelog_1.log(context)),
