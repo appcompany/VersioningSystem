@@ -145,7 +145,7 @@ export const previewComment = (context: ReleaseContext) => {
     \`\`\`
     ${internal.length == 0 ? 'No internal changes.' : internal}
     \`\`\`
-    > add the \`released\` tag to this pull request to create this release.
+    > add the \`create-release\` tag to this pull request to create this release.
     <!-- version-bot-comment: changelog -->
   `.split('\n').map(line => line.trim()).join('\n')
   if (context.status.changelogCommentID != undefined) {

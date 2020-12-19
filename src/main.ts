@@ -31,7 +31,7 @@ try {
     if (context.options.preview || context.options.changelog) previewComment(context)
     if (context.options.release) {
 
-      if (context.canRelease && context.nextVersion?.display != undefined) {
+      if (context.nextVersion?.display != undefined) {
 
         const sha = (await context.connection?.pulls.merge({
           ...github.context.repo,

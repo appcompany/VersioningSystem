@@ -115,7 +115,6 @@ export class ReleaseContext {
 
   currentVersion: Version | undefined
   nextVersion: Version | undefined
-  canRelease: boolean = false
 
   updateFooter: string | undefined
   updateMessage: string | undefined
