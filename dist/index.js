@@ -213,9 +213,6 @@ const majorPath = path_1.resolve(`${(_a = process.env.GITHUB_WORKSPACE) !== null
 const messagePath = path_1.resolve(`${(_b = process.env.GITHUB_WORKSPACE) !== null && _b !== void 0 ? _b : process.cwd()}/.versioning/update_message`);
 const footerPath = path_1.resolve(`${(_c = process.env.GITHUB_WORKSPACE) !== null && _c !== void 0 ? _c : process.cwd()}/.versioning/update_footer`);
 class ReleaseStatus {
-    constructor() {
-        this.shouldRelease = false;
-    }
 }
 exports.ReleaseStatus = ReleaseStatus;
 class SystemOptions {
@@ -395,6 +392,7 @@ try {
                     commit_title: `merging v${context.nextVersion.display} into ${context.releaseTarget}`,
                     commit_message: changelog_1.log(context)
                 })))) === null || _e === void 0 ? void 0 : _e.data.sha;
+                console.log(sha);
                 if (sha != undefined) {
                     const changelog = changelog_1.log(context);
                     const changes = changelog_1.changelist(changelog);
@@ -411,14 +409,14 @@ try {
                         prerelease: context.releaseTarget != context_1.ReleaseTarget.appstore
                     })))) === null || _g === void 0 ? void 0 : _g.data.id;
                     if (release_id) {
-                        (_h = context.connection) === null || _h === void 0 ? void 0 : _h.repos.uploadReleaseAsset({ ...github.context.repo, release_id, name: 'release.json', data: JSON.stringify({
+                        await ((_h = context.connection) === null || _h === void 0 ? void 0 : _h.repos.uploadReleaseAsset({ ...github.context.repo, release_id, name: 'release.json', data: JSON.stringify({
                                 prev_version: context.currentVersion,
                                 version: context.nextVersion,
                                 changes: changelog_1.changelist(changelog_1.log(context)),
                                 appstore_changelog: appstore,
                                 internal_changelog: internal,
                                 sha, pull_number: context.pullNumber
-                            }) });
+                            }) }));
                     }
                 }
             }

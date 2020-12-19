@@ -43,6 +43,8 @@ try {
           commit_message: log(context)
         }))?.data.sha
 
+        console.log(sha)
+
         if (sha != undefined) {
 
           const changelog = log(context)
@@ -63,7 +65,7 @@ try {
           }))?.data.id
 
           if (release_id) {
-            context.connection?.repos.uploadReleaseAsset({ ...github.context.repo, release_id, name: 'release.json', data: JSON.stringify({
+            await context.connection?.repos.uploadReleaseAsset({ ...github.context.repo, release_id, name: 'release.json', data: JSON.stringify({
               prev_version: context.currentVersion,
               version: context.nextVersion,
               changes: changelist(log(context)),

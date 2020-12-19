@@ -14,7 +14,6 @@ const footerPath = resolve(`${process.env.GITHUB_WORKSPACE ?? process.cwd()}/.ve
 export class ReleaseStatus {
 
   changelogCommentID: number | undefined
-  shouldRelease = false
   didMerge: boolean | undefined
 
 }
