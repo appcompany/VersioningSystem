@@ -141,9 +141,9 @@ const previewComment = (context) => {
     }
     const comment = `
     # Versions.
-    > creates release: ${context.canRelease ? 'yes' : 'no'}
+    > creates release: ${context.status.canRelease ? 'yes' : 'no'}
     >*current: ${(_b = (_a = context.currentVersion) === null || _a === void 0 ? void 0 : _a.display) !== null && _b !== void 0 ? _b : '-'}*
-    > \`next: ${context.canRelease ? `${versions_1.nextVersion((_c = context.currentVersion) !== null && _c !== void 0 ? _c : new versions_1.Version('0.0.1'), bump).display}${context.releaseTarget != context_1.ReleaseTarget.appstore ? `-${context.releaseTarget}` : ''}` : '-'}\`
+    > \`next: ${context.status.canRelease ? `${versions_1.nextVersion((_c = context.currentVersion) !== null && _c !== void 0 ? _c : new versions_1.Version('0.0.1'), bump).display}${context.releaseTarget != context_1.ReleaseTarget.appstore ? `-${context.releaseTarget}` : ''}` : '-'}\`
 
     # Changelogs.
     > please make any needed changes and wait for the preview to generate in this comment.
@@ -154,7 +154,7 @@ const previewComment = (context) => {
     <!-- end-changelog-list -->
     ### App Store Preview
     \`\`\`
-    ${appstore.length == 0 || !context.canRelease ? 'No releaseable changes.' : appstore}
+    ${appstore.length == 0 || !context.status.canRelease ? 'No releaseable changes.' : appstore}
     \`\`\`
     ##### Internal Preview
     \`\`\`
@@ -213,6 +213,10 @@ const majorPath = path_1.resolve(`${(_a = process.env.GITHUB_WORKSPACE) !== null
 const messagePath = path_1.resolve(`${(_b = process.env.GITHUB_WORKSPACE) !== null && _b !== void 0 ? _b : process.cwd()}/.versioning/update_message`);
 const footerPath = path_1.resolve(`${(_c = process.env.GITHUB_WORKSPACE) !== null && _c !== void 0 ? _c : process.cwd()}/.versioning/update_footer`);
 class ReleaseStatus {
+    constructor() {
+        this.canMerge = false;
+        this.canRelease = false;
+    }
 }
 exports.ReleaseStatus = ReleaseStatus;
 class SystemOptions {
@@ -280,16 +284,16 @@ class ReleaseContext {
         this.comments = [];
         this.commits = [];
         this.releaseTarget = ReleaseTarget.invalid;
-        this.canRelease = false;
         this.load = async (callback) => {
-            var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p, _q, _r, _s, _t, _u, _v;
+            var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p, _q, _r, _s, _t, _u, _v, _w;
             const data = (_b = (await ((_a = this.connection) === null || _a === void 0 ? void 0 : _a.pulls.get({ ...github.context.repo, pull_number: this.pullNumber })))) === null || _b === void 0 ? void 0 : _b.data;
             this.labels = ((_c = data === null || data === void 0 ? void 0 : data.labels) !== null && _c !== void 0 ? _c : []).map(label => { var _a; return (_a = label === null || label === void 0 ? void 0 : label.name) !== null && _a !== void 0 ? _a : ''; }).filter(label => label != undefined);
             this.requestBody = (_d = data === null || data === void 0 ? void 0 : data.body) !== null && _d !== void 0 ? _d : '';
             this.status.didMerge = data === null || data === void 0 ? void 0 : data.merged;
-            this.commits = (_g = (_f = (await ((_e = this.connection) === null || _e === void 0 ? void 0 : _e.paginate(this.connection.pulls.listCommits, { ...github.context.repo, pull_number: this.pullNumber })))) === null || _f === void 0 ? void 0 : _f.map(commit => new Commit({ ...commit }))) !== null && _g !== void 0 ? _g : [];
+            this.status.canMerge = (_e = data === null || data === void 0 ? void 0 : data.mergeable) !== null && _e !== void 0 ? _e : false;
+            this.commits = (_h = (_g = (await ((_f = this.connection) === null || _f === void 0 ? void 0 : _f.paginate(this.connection.pulls.listCommits, { ...github.context.repo, pull_number: this.pullNumber })))) === null || _g === void 0 ? void 0 : _g.map(commit => new Commit({ ...commit }))) !== null && _h !== void 0 ? _h : [];
             for (const commit of this.commits) {
-                commit.alreadyInBase = ['identical', 'behind'].includes((_m = (_l = (await ((_h = this.connection) === null || _h === void 0 ? void 0 : _h.repos.compareCommits({ ...github.context.repo, base: (_j = data === null || data === void 0 ? void 0 : data.base.ref) !== null && _j !== void 0 ? _j : '', head: (_k = commit.sha) !== null && _k !== void 0 ? _k : '' })))) === null || _l === void 0 ? void 0 : _l.data.status) !== null && _m !== void 0 ? _m : '');
+                commit.alreadyInBase = ['identical', 'behind'].includes((_o = (_m = (await ((_j = this.connection) === null || _j === void 0 ? void 0 : _j.repos.compareCommits({ ...github.context.repo, base: (_k = data === null || data === void 0 ? void 0 : data.base.ref) !== null && _k !== void 0 ? _k : '', head: (_l = commit.sha) !== null && _l !== void 0 ? _l : '' })))) === null || _m === void 0 ? void 0 : _m.data.status) !== null && _o !== void 0 ? _o : '');
             }
             switch (data === null || data === void 0 ? void 0 : data.base.ref.trim()) {
                 case 'appstore':
@@ -304,11 +308,11 @@ class ReleaseContext {
                 default:
                     this.releaseTarget = ReleaseTarget.invalid;
             }
-            this.comments = ((_q = (await ((_o = this.connection) === null || _o === void 0 ? void 0 : _o.paginate((_p = this.connection) === null || _p === void 0 ? void 0 : _p.issues.listComments, { ...github.context.repo, issue_number: this.pullNumber })))) !== null && _q !== void 0 ? _q : []).flatMap(comment => comment != undefined ? [new Comment(comment)] : []);
-            this.status.changelogCommentID = (_r = this.comments.find(comment => comment.content.includes('<!-- version-bot-comment: changelog -->'))) === null || _r === void 0 ? void 0 : _r.id;
-            this.releases = (_v = (_u = (await ((_s = this.connection) === null || _s === void 0 ? void 0 : _s.paginate((_t = this.connection) === null || _t === void 0 ? void 0 : _t.repos.listReleases, { ...github.context.repo, })))) === null || _u === void 0 ? void 0 : _u.flatMap(release => release != undefined ? [new Release(release)] : [])) !== null && _v !== void 0 ? _v : [];
+            this.comments = ((_r = (await ((_p = this.connection) === null || _p === void 0 ? void 0 : _p.paginate((_q = this.connection) === null || _q === void 0 ? void 0 : _q.issues.listComments, { ...github.context.repo, issue_number: this.pullNumber })))) !== null && _r !== void 0 ? _r : []).flatMap(comment => comment != undefined ? [new Comment(comment)] : []);
+            this.status.changelogCommentID = (_s = this.comments.find(comment => comment.content.includes('<!-- version-bot-comment: changelog -->'))) === null || _s === void 0 ? void 0 : _s.id;
+            this.releases = (_w = (_v = (await ((_t = this.connection) === null || _t === void 0 ? void 0 : _t.paginate((_u = this.connection) === null || _u === void 0 ? void 0 : _u.repos.listReleases, { ...github.context.repo, })))) === null || _v === void 0 ? void 0 : _v.flatMap(release => release != undefined ? [new Release(release)] : [])) !== null && _w !== void 0 ? _w : [];
             this.currentVersion = versions_1.currentVersion(this.releases);
-            this.canRelease = this.releaseTarget != ReleaseTarget.invalid && changelog_1.changelist(changelog_1.log(this)).map(change => change.section.type).includes(changelog_1.SectionType.release);
+            this.status.canRelease = this.releaseTarget != ReleaseTarget.invalid && changelog_1.changelist(changelog_1.log(this)).map(change => change.section.type).includes(changelog_1.SectionType.release);
             callback();
         };
         if (Number((_b = core.getInput('pullRequest')) !== null && _b !== void 0 ? _b : '') == NaN && process.env.TESTING !== 'true') {
@@ -357,13 +361,14 @@ const core = __importStar(__webpack_require__(186));
 const github = __importStar(__webpack_require__(438));
 const changelog_1 = __webpack_require__(82);
 const context_1 = __webpack_require__(842);
+const versions_1 = __webpack_require__(332);
 try {
     const context = new context_1.ReleaseContext();
     if (context.options.token == '' || context.options.token == undefined) {
         throw Error('No token supplied, please provide a working access token.');
     }
     context.load(async () => {
-        var _a, _b, _c, _d, _e, _f, _g, _h;
+        var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k;
         if (context.options.labels) {
             const labels = changelog_1.changelist(changelog_1.log(context)).map(change => change.section.tags[0]);
             var toAdd = [];
@@ -383,41 +388,51 @@ try {
         if (context.options.preview || context.options.changelog)
             changelog_1.previewComment(context);
         if (context.options.release) {
-            console.log(JSON.stringify(context));
-            if (((_c = context.nextVersion) === null || _c === void 0 ? void 0 : _c.display) != undefined) {
-                const sha = (_e = (await ((_d = context.connection) === null || _d === void 0 ? void 0 : _d.pulls.merge({
+            if (context.currentVersion == undefined)
+                return core.setFailed('could not determine current version');
+            if (context.status.canMerge == false) {
+                await ((_c = context.connection) === null || _c === void 0 ? void 0 : _c.issues.removeLabel({ ...github.context.repo, issue_number: context.pullNumber, name: 'create-release' }));
+                return core.setFailed('this pull request is not ready to merge yet');
+            }
+            const changes = changelog_1.changelist(changelog_1.log(context));
+            var bump = versions_1.VersionIncrease.none;
+            for (const change of changes) {
+                if (versions_1.increaseOrder.indexOf(change.section.increases) < versions_1.increaseOrder.indexOf(bump))
+                    bump = change.section.increases;
+            }
+            const version = versions_1.nextVersion(context.currentVersion, bump);
+            const sha = (_e = (await ((_d = context.connection) === null || _d === void 0 ? void 0 : _d.pulls.merge({
+                ...github.context.repo,
+                pull_number: context.pullNumber,
+                merge_method: 'squash',
+                commit_title: `merging v${version.display} into ${context.releaseTarget}`,
+                commit_message: changelog_1.log(context)
+            })))) === null || _e === void 0 ? void 0 : _e.data.sha;
+            if (sha != undefined && context.status.canRelease) {
+                const changelog = changelog_1.log(context);
+                const changes = changelog_1.changelist(changelog);
+                const tags = changes.map(change => change.section.tags[0]);
+                const appstore = changelog_1.appStoreChangelog(context, tags, changes).trim();
+                const internal = changelog_1.internalChangelog(tags, changes).trim();
+                const release_id = (_g = (await ((_f = context.connection) === null || _f === void 0 ? void 0 : _f.repos.createRelease({
                     ...github.context.repo,
-                    pull_number: context.pullNumber,
-                    merge_method: 'squash',
-                    commit_title: `merging v${context.nextVersion.display} into ${context.releaseTarget}`,
-                    commit_message: changelog_1.log(context)
-                })))) === null || _e === void 0 ? void 0 : _e.data.sha;
-                console.log(sha);
-                if (sha != undefined) {
-                    const changelog = changelog_1.log(context);
-                    const changes = changelog_1.changelist(changelog);
-                    const tags = changes.map(change => change.section.tags[0]);
-                    const appstore = changelog_1.appStoreChangelog(context, tags, changes).trim();
-                    const internal = changelog_1.internalChangelog(tags, changes).trim();
-                    const release_id = (_g = (await ((_f = context.connection) === null || _f === void 0 ? void 0 : _f.repos.createRelease({
-                        ...github.context.repo,
-                        tag_name: context.nextVersion.display,
-                        target_commitish: sha,
-                        name: context.nextVersion.display,
-                        body: `${appstore}\n\n${internal}`.trim(),
-                        draft: true,
-                        prerelease: context.releaseTarget != context_1.ReleaseTarget.appstore
-                    })))) === null || _g === void 0 ? void 0 : _g.data.id;
-                    if (release_id) {
-                        await ((_h = context.connection) === null || _h === void 0 ? void 0 : _h.repos.uploadReleaseAsset({ ...github.context.repo, release_id, name: 'release.json', data: JSON.stringify({
-                                prev_version: context.currentVersion,
-                                version: context.nextVersion,
-                                changes: changelog_1.changelist(changelog_1.log(context)),
-                                appstore_changelog: appstore,
-                                internal_changelog: internal,
-                                sha, pull_number: context.pullNumber
-                            }) }));
-                    }
+                    tag_name: version.display,
+                    target_commitish: sha,
+                    name: version.display,
+                    body: `${appstore}\n\n${internal}`.trim(),
+                    draft: true,
+                    prerelease: context.releaseTarget != context_1.ReleaseTarget.appstore
+                })))) === null || _g === void 0 ? void 0 : _g.data.id;
+                if (release_id) {
+                    await ((_h = context.connection) === null || _h === void 0 ? void 0 : _h.repos.uploadReleaseAsset({ ...github.context.repo, release_id, name: 'release.json', data: JSON.stringify({
+                            prev_version: context.currentVersion,
+                            version, changes,
+                            appstore_changelog: appstore,
+                            internal_changelog: internal,
+                            sha, pull_number: context.pullNumber
+                        }) }));
+                    await ((_j = context.connection) === null || _j === void 0 ? void 0 : _j.issues.removeLabel({ ...github.context.repo, issue_number: context.pullNumber, name: 'create-release' }));
+                    await ((_k = context.connection) === null || _k === void 0 ? void 0 : _k.issues.addLabels({ ...github.context.repo, issue_number: context.pullNumber, labels: ['released'] }));
                 }
             }
         }

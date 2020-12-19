@@ -15,6 +15,8 @@ export class ReleaseStatus {
 
   changelogCommentID: number | undefined
   didMerge: boolean | undefined
+  canMerge: boolean = false
+  canRelease: boolean = false
 
 }
 
@@ -111,10 +113,8 @@ export class ReleaseContext {
   commits: Commit[] = []
 
   releaseTarget: ReleaseTarget = ReleaseTarget.invalid
-
   currentVersion: Version | undefined
-  nextVersion: Version | undefined
-  canRelease: boolean = false
+  
 
   updateFooter: string | undefined
   updateMessage: string | undefined
@@ -126,6 +126,7 @@ export class ReleaseContext {
     this.labels = (data?.labels ?? []).map(label => label?.name ?? '').filter(label => label != undefined)
     this.requestBody = data?.body ?? ''
     this.status.didMerge = data?.merged
+    this.status.canMerge = data?.mergeable ?? false
 
     this.commits = (await this.connection?.paginate(
       this.connection.pulls.listCommits, { ...github.context.repo, pull_number: this.pullNumber }
@@ -160,7 +161,7 @@ export class ReleaseContext {
     ))?.flatMap(release => release != undefined ? [new Release(release)] : []) ?? []
 
     this.currentVersion = currentVersion(this.releases)
-    this.canRelease = this.releaseTarget != ReleaseTarget.invalid && changelist(log(this)).map(change => change.section.type).includes(SectionType.release)
+    this.status.canRelease = this.releaseTarget != ReleaseTarget.invalid && changelist(log(this)).map(change => change.section.type).includes(SectionType.release)
 
     callback()
 
