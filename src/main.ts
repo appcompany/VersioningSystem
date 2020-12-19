@@ -60,8 +60,6 @@ try {
 
       if (sha != undefined && context.status.canRelease) {
 
-        
-
         const release_id = (await context.connection?.repos.createRelease({
           ...github.context.repo,
           tag_name: version.display,

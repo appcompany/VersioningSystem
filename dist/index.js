@@ -27,7 +27,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.previewComment = exports.internalChangelog = exports.appStoreChangelog = exports.changelist = exports.log = exports.sections = exports.ChangelogSection = exports.SectionType = void 0;
+exports.previewComment = exports.releaseChangelog = exports.internalChangelog = exports.appStoreChangelog = exports.changelist = exports.log = exports.sections = exports.ChangelogSection = exports.SectionType = void 0;
 const context_1 = __webpack_require__(842);
 const versions_1 = __webpack_require__(332);
 const github = __importStar(__webpack_require__(438));
@@ -97,7 +97,8 @@ const changelist = (changelog) => {
     });
 };
 exports.changelist = changelist;
-const appStoreChangelog = (context, tags, changes) => {
+const appStoreChangelog = (context, changes) => {
+    const tags = changes.map(change => change.section.tags[0]);
     var appstoreChangelog = '';
     for (const section of exports.sections.filter(section => section.type == SectionType.release)) {
         if (tags.includes(section.tags[0])) {
@@ -114,7 +115,8 @@ const appStoreChangelog = (context, tags, changes) => {
   `.split('\n').map(line => line.trim()).join('\n');
 };
 exports.appStoreChangelog = appStoreChangelog;
-const internalChangelog = (tags, changes) => {
+const internalChangelog = (changes) => {
+    const tags = changes.map(change => change.section.tags[0]);
     var internalChangelog = '';
     for (const section of exports.sections.filter(section => section.type == SectionType.internal)) {
         if (tags.includes(section.tags[0])) {
@@ -127,13 +129,26 @@ const internalChangelog = (tags, changes) => {
     return internalChangelog;
 };
 exports.internalChangelog = internalChangelog;
+const releaseChangelog = (changes) => {
+    const tags = changes.map(change => change.section.tags[0]);
+    var releaseChangelog = '';
+    for (const section of exports.sections) {
+        if (tags.includes(section.tags[0])) {
+            releaseChangelog += `\n${section.displayName}:\n`;
+            for (const change of changes.filter(change => change.section.tags[0] == section.tags[0])) {
+                releaseChangelog += `- ${change.message}\n`;
+            }
+        }
+    }
+    return releaseChangelog;
+};
+exports.releaseChangelog = releaseChangelog;
 const previewComment = (context) => {
     var _a, _b, _c, _d, _e;
     const changelog = exports.log(context);
     const changes = exports.changelist(changelog);
-    const tags = changes.map(change => change.section.tags[0]);
-    const appstore = exports.appStoreChangelog(context, tags, changes).trim();
-    const internal = exports.internalChangelog(tags, changes).trim();
+    const appstore = exports.appStoreChangelog(context, changes).trim();
+    const internal = exports.internalChangelog(changes).trim();
     var bump = versions_1.VersionIncrease.none;
     for (const change of changes) {
         if (versions_1.increaseOrder.indexOf(change.section.increases) < versions_1.increaseOrder.indexOf(bump))
@@ -368,7 +383,7 @@ try {
         throw Error('No token supplied, please provide a working access token.');
     }
     context.load(async () => {
-        var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k;
+        var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l;
         if (context.options.labels) {
             const labels = changelog_1.changelist(changelog_1.log(context)).map(change => change.section.tags[0]);
             var toAdd = [];
@@ -395,6 +410,10 @@ try {
                 return core.setFailed('this pull request is not ready to merge yet');
             }
             const changes = changelog_1.changelist(changelog_1.log(context));
+            const changelog = changelog_1.log(context);
+            const appstore_changelog = changelog_1.appStoreChangelog(context, changes).trim();
+            const internal_changelog = changelog_1.internalChangelog(changes).trim();
+            const release_changelog = changelog_1.releaseChangelog(changes).trim();
             var bump = versions_1.VersionIncrease.none;
             for (const change of changes) {
                 if (versions_1.increaseOrder.indexOf(change.section.increases) < versions_1.increaseOrder.indexOf(bump))
@@ -409,30 +428,25 @@ try {
                 commit_message: changelog_1.log(context)
             })))) === null || _e === void 0 ? void 0 : _e.data.sha;
             if (sha != undefined && context.status.canRelease) {
-                const changelog = changelog_1.log(context);
-                const changes = changelog_1.changelist(changelog);
-                const tags = changes.map(change => change.section.tags[0]);
-                const appstore = changelog_1.appStoreChangelog(context, tags, changes).trim();
-                const internal = changelog_1.internalChangelog(tags, changes).trim();
                 const release_id = (_g = (await ((_f = context.connection) === null || _f === void 0 ? void 0 : _f.repos.createRelease({
                     ...github.context.repo,
                     tag_name: version.display,
                     target_commitish: sha,
                     name: version.display,
-                    body: `${appstore}\n\n${internal}`.trim(),
-                    draft: true,
+                    body: release_changelog,
+                    draft: false,
                     prerelease: context.releaseTarget != context_1.ReleaseTarget.appstore
                 })))) === null || _g === void 0 ? void 0 : _g.data.id;
                 if (release_id) {
                     await ((_h = context.connection) === null || _h === void 0 ? void 0 : _h.repos.uploadReleaseAsset({ ...github.context.repo, release_id, name: 'release.json', data: JSON.stringify({
                             prev_version: context.currentVersion,
-                            version, changes,
-                            appstore_changelog: appstore,
-                            internal_changelog: internal,
+                            version, changes, release_changelog,
+                            appstore_changelog, internal_changelog,
                             sha, pull_number: context.pullNumber
                         }) }));
-                    await ((_j = context.connection) === null || _j === void 0 ? void 0 : _j.issues.removeLabel({ ...github.context.repo, issue_number: context.pullNumber, name: 'create-release' }));
-                    await ((_k = context.connection) === null || _k === void 0 ? void 0 : _k.issues.addLabels({ ...github.context.repo, issue_number: context.pullNumber, labels: ['released'] }));
+                    await ((_j = context.connection) === null || _j === void 0 ? void 0 : _j.repos.uploadReleaseAsset({ ...github.context.repo, release_id, name: 'appstore_changelog', data: appstore_changelog }));
+                    await ((_k = context.connection) === null || _k === void 0 ? void 0 : _k.issues.removeLabel({ ...github.context.repo, issue_number: context.pullNumber, name: 'create-release' }));
+                    await ((_l = context.connection) === null || _l === void 0 ? void 0 : _l.issues.addLabels({ ...github.context.repo, issue_number: context.pullNumber, labels: ['released'] }));
                 }
             }
         }
