@@ -74,8 +74,9 @@ export const changelist = (changelog: string) => {
 
 }
 
-export const appStoreChangelog = (context: ReleaseContext, tags: string[], changes: Change[]) => {
+export const appStoreChangelog = (context: ReleaseContext, changes: Change[]) => {
 
+  const tags = changes.map(change => change.section.tags[0])
   var appstoreChangelog = ''
   for (const section of sections.filter(section => section.type == SectionType.release)) {
     if (tags.includes(section.tags[0])) {
@@ -94,8 +95,9 @@ export const appStoreChangelog = (context: ReleaseContext, tags: string[], chang
 
 }
 
-export const internalChangelog = (tags: string[], changes: Change[]) => {
+export const internalChangelog = (changes: Change[]) => {
   
+  const tags = changes.map(change => change.section.tags[0])
   var internalChangelog = ''
   for (const section of sections.filter(section => section.type == SectionType.internal)) {
     if (tags.includes(section.tags[0])) {
@@ -110,14 +112,30 @@ export const internalChangelog = (tags: string[], changes: Change[]) => {
 
 }
 
+export const releaseChangelog = (changes: Change[]) => {
+
+  const tags = changes.map(change => change.section.tags[0])
+  var releaseChangelog = ''
+  for (const section of sections) {
+    if (tags.includes(section.tags[0])) {
+      releaseChangelog += `\n${section.displayName}:\n`
+      for (const change of changes.filter(change => change.section.tags[0] == section.tags[0])) {
+        releaseChangelog += `- ${change.message}\n`
+      }
+    }
+  }
+
+  return releaseChangelog
+
+}
+
 export const previewComment = (context: ReleaseContext) => {
 
   const changelog = log(context)
   const changes = changelist(changelog)
-  const tags = changes.map(change => change.section.tags[0])
 
-  const appstore = appStoreChangelog(context, tags, changes).trim()
-  const internal = internalChangelog(tags, changes).trim()
+  const appstore = appStoreChangelog(context, changes).trim()
+  const internal = internalChangelog(changes).trim()
 
   var bump = VersionIncrease.none
   for (const change of changes) {

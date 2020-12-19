@@ -1,6 +1,7 @@
 import * as core from '@actions/core'
 import * as github from '@actions/github'
-import { appStoreChangelog, changelist, internalChangelog, log, previewComment, sections } from './changelog'
+import { release } from 'os'
+import { appStoreChangelog, changelist, internalChangelog, log, previewComment, releaseChangelog, sections } from './changelog'
 import { ReleaseContext, ReleaseTarget } from './context'
 import { increaseOrder, nextVersion, VersionIncrease } from './versions'
 
@@ -39,6 +40,10 @@ try {
       }
 
       const changes = changelist(log(context))
+      const changelog = log(context)
+      const appstore_changelog = appStoreChangelog(context, changes).trim()
+      const internal_changelog = internalChangelog(changes).trim()
+      const release_changelog = releaseChangelog(changes).trim()
       var bump = VersionIncrease.none
       for (const change of changes) {
         if (increaseOrder.indexOf(change.section.increases) < increaseOrder.indexOf(bump)) bump = change.section.increases
@@ -55,31 +60,26 @@ try {
 
       if (sha != undefined && context.status.canRelease) {
 
-        const changelog = log(context)
-        const changes = changelist(changelog)
-        const tags = changes.map(change => change.section.tags[0])
-
-        const appstore = appStoreChangelog(context, tags, changes).trim()
-        const internal = internalChangelog(tags, changes).trim()
+        
 
         const release_id = (await context.connection?.repos.createRelease({
           ...github.context.repo,
           tag_name: version.display,
           target_commitish: sha,
           name: version.display,
-          body: `${appstore}\n\n${internal}`.trim(),
-          draft: true,
+          body: release_changelog,
+          draft: false,
           prerelease: context.releaseTarget != ReleaseTarget.appstore
         }))?.data.id
 
         if (release_id) {
           await context.connection?.repos.uploadReleaseAsset({ ...github.context.repo, release_id, name: 'release.json', data: JSON.stringify({
             prev_version: context.currentVersion,
-            version, changes,
-            appstore_changelog: appstore,
-            internal_changelog: internal,
+            version, changes, release_changelog,
+            appstore_changelog, internal_changelog,
             sha, pull_number: context.pullNumber
           })})
+          await context.connection?.repos.uploadReleaseAsset({ ...github.context.repo, release_id, name: 'appstore_changelog', data: appstore_changelog })
           await context.connection?.issues.removeLabel({ ...github.context.repo, issue_number: context.pullNumber, name: 'create-release' })
           await context.connection?.issues.addLabels({ ...github.context.repo, issue_number: context.pullNumber, labels: ['released'] })
         }
