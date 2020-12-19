@@ -386,6 +386,7 @@ try {
         if (context.options.preview || context.options.changelog)
             changelog_1.previewComment(context);
         if (context.options.release) {
+            console.log(JSON.stringify(context));
             if (((_c = context.nextVersion) === null || _c === void 0 ? void 0 : _c.display) != undefined) {
                 const sha = (_e = (await ((_d = context.connection) === null || _d === void 0 ? void 0 : _d.pulls.merge({
                     ...github.context.repo,

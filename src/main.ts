@@ -31,6 +31,8 @@ try {
     if (context.options.preview || context.options.changelog) previewComment(context)
     if (context.options.release) {
 
+      console.log(JSON.stringify(context))
+
       if (context.nextVersion?.display != undefined) {
 
         const sha = (await context.connection?.pulls.merge({
