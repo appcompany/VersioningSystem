@@ -40,7 +40,6 @@ try {
       }
 
       const changes = changelist(log(context))
-      const changelog = log(context)
       const appstore_changelog = appStoreChangelog(context, changes).trim()
       const internal_changelog = internalChangelog(changes).trim()
       const release_changelog = releaseChangelog(changes).trim()
