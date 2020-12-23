@@ -53,7 +53,7 @@ try {
         ...github.context.repo,
         pull_number: context.pullNumber,
         merge_method: 'squash',
-        commit_title: `merging v${version.display} into ${context.releaseTarget}`,
+        commit_title: context.status.canRelease ? `merging v${version.display} into ${context.releaseTarget}` : `merging pull #${context.pullNumber} into ${context.releaseTarget}`,
         commit_message: log(context)
       }))?.data.sha
 
