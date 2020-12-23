@@ -1,3 +1,4 @@
+![Header Image for Version Bot](resources/version-bot-header.png)
 # Version Bot
 
 In order to help maintain the a correct changelog and version history for the apps at App Company.io this Github Actions based version-bot was created. It analyzes commits, generates changelogs and also merge pull request and create new releases with the correct changelog attached and the correct versioning number.
