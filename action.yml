@@ -29,3 +29,7 @@ inputs:
     description: 'generate changelog'
     required: false
     default: 'false'
+  tests:
+    description: 'Check if tests are needed'
+    required: false
+    default: 'false'

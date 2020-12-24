@@ -1,5 +1,6 @@
 import * as core from '@actions/core'
 import * as github from '@actions/github'
+import { connect } from 'http2'
 import { release } from 'os'
 import { appStoreChangelog, changelist, internalChangelog, log, previewComment, releaseChangelog, sections } from './changelog'
 import { ReleaseContext, ReleaseTarget } from './context'
@@ -14,6 +15,14 @@ try {
 
   context.load(async () => { 
 
+    if (context.options.tests) {
+
+      const files = (await context.connection?.paginate(context.connection?.pulls.listFiles, { ...github.context.repo, pull_number: context.pullNumber })) ?? []
+      for (const file of files) {
+        console.log(`${file.filename} > ${file.status}`)
+      }
+
+    }
     if (context.options.labels) {
 
       const labels = changelist(log(context)).map(change => change.section.tags[0])
