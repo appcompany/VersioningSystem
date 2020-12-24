@@ -2,6 +2,7 @@ import * as core from '@actions/core'
 import * as github from '@actions/github'
 import { connect } from 'http2'
 import { release } from 'os'
+import { isMatch } from 'picomatch'
 import { appStoreChangelog, changelist, internalChangelog, log, previewComment, releaseChangelog, sections } from './changelog'
 import { ReleaseContext, ReleaseTarget } from './context'
 import { increaseOrder, nextVersion, VersionIncrease } from './versions'
@@ -18,9 +19,28 @@ try {
     if (context.options.tests) {
 
       const files = (await context.connection?.paginate(context.connection?.pulls.listFiles, { ...github.context.repo, pull_number: context.pullNumber })) ?? []
+      var hasChanges = false
       for (const file of files) {
-        console.log(`${file.filename} > ${file.status}`)
+        if (isMatch(file.filename,[
+          // includes
+          'fastlane/**',
+          'Gemfile*',
+          '**.yml',
+          '**.swift',
+          '**.js',
+          '**.plist',
+          '**.json',
+          '**.entitlements',
+          '**.xcscheme',
+          '**.pbxproj',
+          '**.xcassets/**',
+          // excludes
+          '!**.md',
+          '!**/FUNDING.yml'
+        ])) hasChanges = true
       }
+
+      core.setOutput('testable-changes', hasChanges)
 
     }
     if (context.options.labels) {
