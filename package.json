@@ -1,6 +1,6 @@
 {
   "name": "version-bot",
-  "version": "1",
+  "version": "1.0.0",
   "private": true,
   "description": "Helps versioning the apps made by App Company.io",
   "main": "lib/main.js",

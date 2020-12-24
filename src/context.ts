@@ -27,6 +27,7 @@ export class SystemOptions {
   labels: boolean
   changelog: boolean
   preview: boolean
+  tests: boolean
 
   constructor() {
     this.token = core.getInput('token')
@@ -34,6 +35,7 @@ export class SystemOptions {
     this.labels = ['yes','true'].includes(core.getInput('labels').toLowerCase())
     this.changelog = ['yes','true'].includes(core.getInput('changelog').toLowerCase())
     this.preview = ['yes','true'].includes(core.getInput('preview').toLowerCase())
+    this.tests = ['yes','true'].includes(core.getInput('tests'))
   }
 
 }
