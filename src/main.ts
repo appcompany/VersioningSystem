@@ -7,6 +7,31 @@ import { appStoreChangelog, changelist, internalChangelog, log, previewComment, 
 import { ReleaseContext, ReleaseTarget } from './context'
 import { increaseOrder, nextVersion, VersionIncrease } from './versions'
 
+const paths : string[] = [
+  // includes
+  'fastlane/**',
+  'Gemfile*',
+  '**/*.yml',
+  '**/*.swift',
+  '**/*.js',
+  '**/*.plist',
+  '**/*.json',
+  '**/*.entitlements',
+  '**/*.xcscheme',
+  '**/*.pbxproj',
+  '**/*.xcassets/**/*'
+]
+
+export const fileMatch = (file: string) => {
+  return isMatch(file, paths, {
+    dot: true,
+    ignore: [
+      '**.md',
+      '**/FUNDING.yml'
+    ]
+  })
+}
+
 try {
   const context = new ReleaseContext()
 
@@ -21,23 +46,7 @@ try {
       const files = (await context.connection?.paginate(context.connection?.pulls.listFiles, { ...github.context.repo, pull_number: context.pullNumber })) ?? []
       var hasChanges = false
       for (const file of files) {
-        if (isMatch(file.filename,[
-          // includes
-          'fastlane/**',
-          'Gemfile*',
-          '**.yml',
-          '**.swift',
-          '**.js',
-          '**.plist',
-          '**.json',
-          '**.entitlements',
-          '**.xcscheme',
-          '**.pbxproj',
-          '**.xcassets/**',
-          // excludes
-          '!**.md',
-          '!**/FUNDING.yml'
-        ])) hasChanges = true
+        if (fileMatch(file.filename)) hasChanges = true
       }
 
       core.setOutput('testable-changes', hasChanges)

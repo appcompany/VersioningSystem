@@ -15,6 +15,5 @@ describe('Context', () => {
       [feature]-> something new
       [lang(fix)]-> minor fix
     `.split('\n').map(line => line.trim()).join('\n') } })
-    console.log(commit.changes)
   })
 })

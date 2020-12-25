@@ -373,12 +373,37 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.fileMatch = void 0;
 const core = __importStar(__webpack_require__(2186));
 const github = __importStar(__webpack_require__(5438));
 const picomatch_1 = __webpack_require__(8569);
 const changelog_1 = __webpack_require__(1082);
 const context_1 = __webpack_require__(3842);
 const versions_1 = __webpack_require__(7332);
+const paths = [
+    // includes
+    'fastlane/**',
+    'Gemfile*',
+    '**/*.yml',
+    '**/*.swift',
+    '**/*.js',
+    '**/*.plist',
+    '**/*.json',
+    '**/*.entitlements',
+    '**/*.xcscheme',
+    '**/*.pbxproj',
+    '**/*.xcassets/**/*'
+];
+const fileMatch = (file) => {
+    return picomatch_1.isMatch(file, paths, {
+        dot: true,
+        ignore: [
+            '**.md',
+            '**/FUNDING.yml'
+        ]
+    });
+};
+exports.fileMatch = fileMatch;
 try {
     const context = new context_1.ReleaseContext();
     if (context.options.token == '' || context.options.token == undefined) {
@@ -390,23 +415,7 @@ try {
             const files = (_c = (await ((_a = context.connection) === null || _a === void 0 ? void 0 : _a.paginate((_b = context.connection) === null || _b === void 0 ? void 0 : _b.pulls.listFiles, { ...github.context.repo, pull_number: context.pullNumber })))) !== null && _c !== void 0 ? _c : [];
             var hasChanges = false;
             for (const file of files) {
-                if (picomatch_1.isMatch(file.filename, [
-                    // includes
-                    'fastlane/**',
-                    'Gemfile*',
-                    '**.yml',
-                    '**.swift',
-                    '**.js',
-                    '**.plist',
-                    '**.json',
-                    '**.entitlements',
-                    '**.xcscheme',
-                    '**.pbxproj',
-                    '**.xcassets/**',
-                    // excludes
-                    '!**.md',
-                    '!**/FUNDING.yml'
-                ]))
+                if (exports.fileMatch(file.filename))
                     hasChanges = true;
             }
             core.setOutput('testable-changes', hasChanges);
