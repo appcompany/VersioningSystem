@@ -73,9 +73,9 @@ try {
 
       console.log(`head sha: ${context.headSHA}`)
 
-      const suites = await context.connection?.paginate(context.connection., { ...github.context.repo, ref: context.headSHA ?? '' })
-      for (const suite of suites?.check_suites ?? []) {
-        console.log(suite)
+      const checks = await context.connection?.paginate(context.connection.checks.listForRef, { ...github.context.repo, ref: context.headSHA ?? '' })
+      for (const check of checks ?? []) {
+        console.log(JSON.stringify(check))
       }
 
       return
