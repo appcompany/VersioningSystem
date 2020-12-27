@@ -71,7 +71,7 @@ try {
     if (context.options.preview || context.options.changelog) previewComment(context)
     if (context.options.release) {
 
-      const suites = await context.connection?.paginate(context.connection.checks.listForRef, { ...github.context.repo, ref: context.commits[context.commits.length-1].sha ?? '' })
+      const suites = await context.connection?.paginate(context.connection.checks.listForRef, { ...github.context.repo, ref: context.headSHA ?? '' })
       for (const suite of suites?.check_runs ?? []) {
         console.log(suite)
       }

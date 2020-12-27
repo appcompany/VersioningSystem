@@ -116,7 +116,7 @@ export class ReleaseContext {
 
   releaseTarget: ReleaseTarget = ReleaseTarget.invalid
   currentVersion: Version | undefined
-  
+  headSHA: string | undefined 
 
   updateFooter: string | undefined
   updateMessage: string | undefined
@@ -129,6 +129,8 @@ export class ReleaseContext {
     this.requestBody = data?.body ?? ''
     this.status.didMerge = data?.merged
     this.status.canMerge = data?.mergeable ?? false
+
+    this.headSHA = data?.head.sha
 
     this.commits = (await this.connection?.paginate(
       this.connection.pulls.listCommits, { ...github.context.repo, pull_number: this.pullNumber }

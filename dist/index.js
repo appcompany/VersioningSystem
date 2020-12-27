@@ -307,6 +307,7 @@ class ReleaseContext {
             this.requestBody = (_d = data === null || data === void 0 ? void 0 : data.body) !== null && _d !== void 0 ? _d : '';
             this.status.didMerge = data === null || data === void 0 ? void 0 : data.merged;
             this.status.canMerge = (_e = data === null || data === void 0 ? void 0 : data.mergeable) !== null && _e !== void 0 ? _e : false;
+            this.headSHA = data === null || data === void 0 ? void 0 : data.head.sha;
             this.commits = (_h = (_g = (await ((_f = this.connection) === null || _f === void 0 ? void 0 : _f.paginate(this.connection.pulls.listCommits, { ...github.context.repo, pull_number: this.pullNumber })))) === null || _g === void 0 ? void 0 : _g.map(commit => new Commit({ ...commit }))) !== null && _h !== void 0 ? _h : [];
             for (const commit of this.commits) {
                 commit.alreadyInBase = ['identical', 'behind'].includes((_o = (_m = (await ((_j = this.connection) === null || _j === void 0 ? void 0 : _j.repos.compareCommits({ ...github.context.repo, base: (_k = data === null || data === void 0 ? void 0 : data.base.ref) !== null && _k !== void 0 ? _k : '', head: (_l = commit.sha) !== null && _l !== void 0 ? _l : '' })))) === null || _m === void 0 ? void 0 : _m.data.status) !== null && _o !== void 0 ? _o : '');
@@ -439,7 +440,7 @@ try {
         if (context.options.preview || context.options.changelog)
             changelog_1.previewComment(context);
         if (context.options.release) {
-            const suites = await ((_f = context.connection) === null || _f === void 0 ? void 0 : _f.paginate(context.connection.checks.listForRef, { ...github.context.repo, ref: (_g = context.commits[context.commits.length - 1].sha) !== null && _g !== void 0 ? _g : '' }));
+            const suites = await ((_f = context.connection) === null || _f === void 0 ? void 0 : _f.paginate(context.connection.checks.listForRef, { ...github.context.repo, ref: (_g = context.headSHA) !== null && _g !== void 0 ? _g : '' }));
             for (const suite of (_h = suites === null || suites === void 0 ? void 0 : suites.check_runs) !== null && _h !== void 0 ? _h : []) {
                 console.log(suite);
             }
