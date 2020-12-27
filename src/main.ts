@@ -71,8 +71,6 @@ try {
     if (context.options.preview || context.options.changelog) previewComment(context)
     if (context.options.release) {
 
-      console.log(`head sha: ${context.headSHA}`)
-
       var shouldSkip = false
       const checks = await context.connection?.paginate(context.connection.checks.listForRef, { ...github.context.repo, ref: context.headSHA ?? '' })
       for (const check of checks ?? []) {
