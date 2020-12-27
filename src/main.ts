@@ -71,6 +71,13 @@ try {
     if (context.options.preview || context.options.changelog) previewComment(context)
     if (context.options.release) {
 
+      const suites = await context.connection?.paginate(context.connection.checks.listForRef, { ...github.context.repo, ref: context.commits[context.commits.length-1].sha ?? '' })
+      for (const suite of suites?.check_runs ?? []) {
+        console.log(suite)
+      }
+
+      return
+
       if (context.currentVersion == undefined) return core.setFailed('could not determine current version')
       if (context.status.canMerge == false) {
         await context.connection?.issues.removeLabel({ ...github.context.repo, issue_number: context.pullNumber, name: 'create-release' })
@@ -107,14 +114,14 @@ try {
           prerelease: context.releaseTarget != ReleaseTarget.appstore
         }))?.data.id
 
-        if (release_id) {
-          await context.connection?.repos.uploadReleaseAsset({ ...github.context.repo, release_id, name: 'release.json', data: JSON.stringify({
+        if (typeof release_id == 'number') {
+          await context.connection?.repos.uploadReleaseAsset({ ...github.context.repo, release_id: release_id!, name: 'release.json', data: JSON.stringify({
             prev_version: context.currentVersion,
             version, changes, release_changelog,
             appstore_changelog, internal_changelog,
             sha, pull_number: context.pullNumber
           })})
-          await context.connection?.repos.uploadReleaseAsset({ ...github.context.repo, release_id, name: 'appstore_changelog', data: appstore_changelog })
+          await context.connection?.repos.uploadReleaseAsset({ ...github.context.repo, release_id: release_id!, name: 'appstore_changelog', data: appstore_changelog })
           await context.connection?.issues.removeLabel({ ...github.context.repo, issue_number: context.pullNumber, name: 'create-release' })
           await context.connection?.issues.addLabels({ ...github.context.repo, issue_number: context.pullNumber, labels: ['released'] })
         }
