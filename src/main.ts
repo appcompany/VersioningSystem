@@ -73,12 +73,28 @@ try {
 
       console.log(`head sha: ${context.headSHA}`)
 
+      var shouldSkip = false
       const checks = await context.connection?.paginate(context.connection.checks.listForRef, { ...github.context.repo, ref: context.headSHA ?? '' })
       for (const check of checks ?? []) {
-        console.log(`${check.name} > ${check.conclusion}`)
+        for (const check_name of ['ui tests', 'unit tests', 'screenshots']) {
+          if (check.name.toLowerCase().includes(check_name)) {
+            if (!['success','skipped'].includes(check.conclusion)) {
+              console.log(`${check.name} conclusion is ${check.conclusion}`)
+              shouldSkip = true
+            }
+          }
+        }
       }
 
-      return
+      if (!context.labels.includes('changelog-correct')) {
+        shouldSkip = true
+        console.log('no changelog-correct label on pull request.')
+      }
+
+      if (shouldSkip) {
+        console.log('skipping release creation...')
+        return
+      }
 
       if (context.currentVersion == undefined) return core.setFailed('could not determine current version')
       if (context.status.canMerge == false) {
