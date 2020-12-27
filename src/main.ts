@@ -75,7 +75,7 @@ try {
 
       const checks = await context.connection?.paginate(context.connection.checks.listForRef, { ...github.context.repo, ref: context.headSHA ?? '' })
       for (const check of checks ?? []) {
-        console.log(JSON.stringify(check))
+        console.log(`${check.name} > ${check.conclusion}`)
       }
 
       return
