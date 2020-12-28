@@ -22,7 +22,6 @@ export class ReleaseStatus {
 
 export class SystemOptions {
 
-  token: string
   release: boolean
   labels: boolean
   changelog: boolean
@@ -30,7 +29,6 @@ export class SystemOptions {
   tests: boolean
 
   constructor() {
-    this.token = core.getInput('token')
     this.release = ['yes','true'].includes(core.getInput('release').toLowerCase())
     this.labels = ['yes','true'].includes(core.getInput('labels').toLowerCase())
     this.changelog = ['yes','true'].includes(core.getInput('changelog').toLowerCase())
@@ -171,7 +169,7 @@ export class ReleaseContext {
 
   }
 
-  constructor(options: SystemOptions = new SystemOptions()) {
+  constructor(token: string, options: SystemOptions = new SystemOptions()) {
 
     if (Number(core.getInput('pullRequest') ?? '') == NaN && process.env.TESTING !== 'true') {
       throw Error('Unable to find pull request, make sure to run this action with pull requests only.')
@@ -179,7 +177,7 @@ export class ReleaseContext {
 
     if (process.env.TESTING !== 'true') {
       this.options = options
-      this.connection = getOctokit(options.token)
+      this.connection = getOctokit(token)
     }
 
     this.updateFooter = existsSync(footerPath) ? readFileSync(footerPath).toString().trim() : undefined

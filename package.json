@@ -25,6 +25,7 @@
   "dependencies": {
     "@actions/core": "^1.2.6",
     "@actions/github": "^4.0.0",
+    "@octokit/auth-app": "^2.10.5",
     "@octokit/types": "^6.1.2",
     "picomatch": "^2.2.2"
   },
